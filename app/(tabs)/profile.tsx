@@ -201,7 +201,8 @@ export default function Profile() {
             <Ionicons name="chevron-forward" size={24} color="#9CA3AF" />
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
+            onPress={() => router.push("/profile/enrolled")} 
             className="flex-row items-center p-4 border-b border-gray-100"
           >
             <View className="bg-blue-50 p-3 rounded-full mr-4">
