@@ -2,6 +2,8 @@ import { Stack } from "expo-router";
 import { useEffect } from "react";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { notificationService } from "../services/notificationService";
+import "../global.css";
+import { OfflineBanner } from "@/components/OfflineBanner";
 
 export default function RootLayout() {
 
@@ -49,6 +51,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
+      <OfflineBanner />
       <Stack 
         screenOptions={{
           headerShown: false,
