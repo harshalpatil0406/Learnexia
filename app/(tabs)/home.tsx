@@ -145,7 +145,6 @@ export default function Home() {
   useEffect(() => {
     const initialize = async () => {
       try {
-        await initializeStorage();
         await fetchCourses();
         setError(null);
       } catch (err: any) {

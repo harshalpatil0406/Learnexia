@@ -1,11 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { getCourses, getInstructors } from "../services/courseService";
-import { Course, Instructor } from "../types/course";
 import { notificationService } from "../services/notificationService";
+import { Course, Instructor } from "../types/course";
 
-const BOOKMARKS_KEY = "bookmarked_courses";
-const ENROLLED_KEY = "enrolled_courses";
+// Helper functions to get user-specific storage keys
+const getBookmarksKey = (userId: string) => `bookmarked_courses_${userId}`;
+const getEnrolledKey = (userId: string) => `enrolled_courses_${userId}`;
 
 interface CourseState {
   courses: Course[];
@@ -15,12 +16,14 @@ interface CourseState {
   loading: boolean;
   refreshing: boolean;
   searchQuery: string;
+  currentUserId: string | null;
   fetchCourses: () => Promise<void>;
   toggleBookmark: (courseId: string) => Promise<void>;
   enrollCourse: (courseId: string) => Promise<void>;
   setSearchQuery: (query: string) => void;
   getFilteredCourses: () => Course[];
-  initializeStorage: () => Promise<void>;
+  initializeStorage: (userId: string) => Promise<void>;
+  clearUserData: () => Promise<void>;
 }
 
 export const useCourseStore = create<CourseState>((set, get) => ({
@@ -31,6 +34,7 @@ export const useCourseStore = create<CourseState>((set, get) => ({
   loading: false,
   refreshing: false,
   searchQuery: "",
+  currentUserId: null,
 
   fetchCourses: async () => {
     try {
@@ -117,7 +121,13 @@ export const useCourseStore = create<CourseState>((set, get) => ({
 
   toggleBookmark: async (courseId: string) => {
     console.log("toggleBookmark called for:", courseId);
-    const { bookmarkedCourses, courses } = get();
+    const { bookmarkedCourses, courses, currentUserId } = get();
+    
+    if (!currentUserId) {
+      console.error("No user logged in");
+      return;
+    }
+    
     const isBookmarked = bookmarkedCourses.includes(courseId);
     console.log("Current bookmark status:", isBookmarked);
     console.log("Current courses length:", courses.length);
@@ -127,7 +137,7 @@ export const useCourseStore = create<CourseState>((set, get) => ({
       updatedBookmarks = bookmarkedCourses.filter((id) => id !== courseId);
     } else {
       updatedBookmarks = [...bookmarkedCourses, courseId];
-
+      
       // Show notification when user bookmarks 5+ courses
       if (updatedBookmarks.length === 5) {
         await notificationService.showBookmarkMilestoneNotification(5);
@@ -136,7 +146,6 @@ export const useCourseStore = create<CourseState>((set, get) => ({
       } else if (updatedBookmarks.length === 20) {
         await notificationService.showBookmarkMilestoneNotification(20);
       }
-      
     }
 
     console.log("Updated bookmarks:", updatedBookmarks);
@@ -157,17 +166,22 @@ export const useCourseStore = create<CourseState>((set, get) => ({
       courses: updatedCourses 
     });
 
-    // Persist to AsyncStorage
+    // Persist to AsyncStorage with user-specific key
     try {
-      await AsyncStorage.setItem(BOOKMARKS_KEY, JSON.stringify(updatedBookmarks));
-      console.log("Bookmarks saved to storage");
+      await AsyncStorage.setItem(getBookmarksKey(currentUserId), JSON.stringify(updatedBookmarks));
+      console.log("Bookmarks saved to storage for user:", currentUserId);
     } catch (error) {
       console.error("Failed to save bookmarks:", error);
     }
   },
 
   enrollCourse: async (courseId: string) => {
-    const { enrolledCourses, courses } = get();
+    const { enrolledCourses, courses, currentUserId } = get();
+
+    if (!currentUserId) {
+      console.error("No user logged in");
+      return;
+    }
 
     if (enrolledCourses.includes(courseId)) {
       return; // Already enrolled
@@ -182,9 +196,10 @@ export const useCourseStore = create<CourseState>((set, get) => ({
 
     set({ enrolledCourses: updatedEnrolled, courses: updatedCourses });
 
-    // Persist to AsyncStorage
+    // Persist to AsyncStorage with user-specific key
     try {
-      await AsyncStorage.setItem(ENROLLED_KEY, JSON.stringify(updatedEnrolled));
+      await AsyncStorage.setItem(getEnrolledKey(currentUserId), JSON.stringify(updatedEnrolled));
+      console.log("Enrollment saved to storage for user:", currentUserId);
     } catch (error) {
       console.error("Failed to save enrollment:", error);
     }
@@ -211,19 +226,50 @@ export const useCourseStore = create<CourseState>((set, get) => ({
     );
   },
 
-  initializeStorage: async () => {
+  initializeStorage: async (userId: string) => {
     try {
+      console.log("Initializing storage for user:", userId);
+      
       const [bookmarksStr, enrolledStr] = await Promise.all([
-        AsyncStorage.getItem(BOOKMARKS_KEY),
-        AsyncStorage.getItem(ENROLLED_KEY),
+        AsyncStorage.getItem(getBookmarksKey(userId)),
+        AsyncStorage.getItem(getEnrolledKey(userId)),
       ]);
 
       const bookmarkedCourses = bookmarksStr ? JSON.parse(bookmarksStr) : [];
       const enrolledCourses = enrolledStr ? JSON.parse(enrolledStr) : [];
 
-      set({ bookmarkedCourses, enrolledCourses });
+      console.log("Loaded bookmarks:", bookmarkedCourses);
+      console.log("Loaded enrollments:", enrolledCourses);
+
+      set({ 
+        bookmarkedCourses, 
+        enrolledCourses,
+        currentUserId: userId 
+      });
+      
+      // Update courses with the loaded bookmark/enrollment status
+      const { courses } = get();
+      if (courses.length > 0) {
+        const updatedCourses = courses.map((course) => ({
+          ...course,
+          isBookmarked: bookmarkedCourses.includes(course.id),
+          isEnrolled: enrolledCourses.includes(course.id),
+        }));
+        set({ courses: updatedCourses });
+      }
     } catch (error) {
       console.error("Failed to load storage:", error);
     }
+  },
+
+  clearUserData: async () => {
+    console.log("Clearing user-specific course data");
+    set({
+      bookmarkedCourses: [],
+      enrolledCourses: [],
+      currentUserId: null,
+      courses: [],
+      instructors: [],
+    });
   },
 }));

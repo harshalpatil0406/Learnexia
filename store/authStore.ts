@@ -48,6 +48,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         loading: false,
         isAuthenticated: true,
       });
+      
+      // Initialize user-specific course data
+      const { useCourseStore } = await import("./courseStore");
+      await useCourseStore.getState().initializeStorage(user._id || user.id || user.email);
     } catch (err) {
       set({ loading: false });
       throw err;
@@ -55,9 +59,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
+    // Import courseStore dynamically to avoid circular dependency
+    const { useCourseStore } = await import("./courseStore");
+    
     await deleteToken();
     await deleteRefreshToken();
     await deleteUser();
+    
+    // Clear user-specific course data
+    useCourseStore.getState().clearUserData();
+    
     set({ 
       user: null, 
       token: null, 
@@ -83,6 +94,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         token: newAccessToken,
       });
     } catch (err) {
+      // If refresh fails, logout user
       await get().logout();
       throw err;
     }
@@ -99,13 +111,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const refreshToken = await getRefreshToken();
       const user = await getUser();
 
-      if (token) {
+      if (token && user) {
         set({
           token,
           refreshToken,
           user,
           isAuthenticated: true,
         });
+        
+        // Initialize user-specific course data
+        const { useCourseStore } = await import("./courseStore");
+        await useCourseStore.getState().initializeStorage(user._id || user.id || user.email);
       }
     } catch (err) {
       console.error("Failed to initialize auth:", err);
@@ -118,6 +134,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       const res = await updateAvatar(imageUri);
       
+      // Update user with new avatar from response
       const updatedUser = res.data?.user || { ...get().user, avatar: res.data?.avatar };
       
       await saveUser(updatedUser);
@@ -132,10 +149,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-    updateUser: async (userData: { username?: string; email?: string }) => {
+  updateUser: async (userData: { username?: string; email?: string }) => {
     try {
       set({ loading: true });
       
+      // In a real app, you would call an API endpoint to update user info
+      // For now, we'll just update the local state
       const currentUser = get().user;
       const updatedUser = {
         ...currentUser,
@@ -153,5 +172,4 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw err;
     }
   },
-
 }));
