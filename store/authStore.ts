@@ -15,6 +15,7 @@ interface AuthState {
   setUser: (user: any) => void;
   initializeAuth: () => Promise<void>;
   uploadAvatar: (imageUri: string) => Promise<void>;
+  updateUser: (userData: { username?: string; email?: string }) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -82,7 +83,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         token: newAccessToken,
       });
     } catch (err) {
-      // If refresh fails, logout user
       await get().logout();
       throw err;
     }
@@ -118,7 +118,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       const res = await updateAvatar(imageUri);
       
-      // Update user with new avatar from response
       const updatedUser = res.data?.user || { ...get().user, avatar: res.data?.avatar };
       
       await saveUser(updatedUser);
@@ -132,4 +131,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw err;
     }
   },
+
+    updateUser: async (userData: { username?: string; email?: string }) => {
+    try {
+      set({ loading: true });
+      
+      const currentUser = get().user;
+      const updatedUser = {
+        ...currentUser,
+        ...userData,
+      };
+      
+      await saveUser(updatedUser);
+      
+      set({
+        user: updatedUser,
+        loading: false,
+      });
+    } catch (err) {
+      set({ loading: false });
+      throw err;
+    }
+  },
+
 }));
