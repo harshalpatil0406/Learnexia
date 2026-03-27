@@ -1,18 +1,27 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, Text, TextInput, View } from "react-native";
 import { useCourseStore } from "../../store/courseStore";
 import { Course } from "../../types/course";
 
-// Separate component for course item to handle image state
-function CourseItem({ item, onPress, onBookmark }: { 
+// Memoized course item component for better performance
+// Using a Map to track image errors persistently across re-renders
+const imageErrorCache = new Map<string, boolean>();
+
+const CourseItem = React.memo(({ item, onPress, onBookmark }: { 
   item: Course; 
   onPress: () => void; 
   onBookmark: () => void;
-}) {
-  const [imageError, setImageError] = useState(false);
+}) => {
+  // Use cached error state instead of local state to prevent blinking
+  const [imageError, setImageError] = useState(() => imageErrorCache.get(item.id) || false);
   const isBookmarked = useCourseStore.getState().bookmarkedCourses.includes(item.id);
+
+  const handleImageError = useCallback(() => {
+    imageErrorCache.set(item.id, true);
+    setImageError(true);
+  }, [item.id]);
 
   return (
     <View className="bg-white rounded-2xl mb-4 shadow-sm overflow-hidden">
@@ -24,7 +33,7 @@ function CourseItem({ item, onPress, onBookmark }: {
               source={{ uri: item.thumbnail }}
               className="w-full h-48"
               resizeMode="cover"
-              onError={() => setImageError(true)}
+              onError={handleImageError}
             />
           ) : (
             <View className="w-full h-48 bg-blue-500 items-center justify-center">
@@ -108,7 +117,14 @@ function CourseItem({ item, onPress, onBookmark }: {
       </Pressable>
     </View>
   );
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison function for better memoization
+  return (
+    prevProps.item.id === nextProps.item.id &&
+    prevProps.item.isBookmarked === nextProps.item.isBookmarked &&
+    prevProps.item.thumbnail === nextProps.item.thumbnail
+  );
+});
 
 export default function Home() {
   const router = useRouter();
@@ -151,11 +167,11 @@ export default function Home() {
     setIsRefreshing(false);
   };
 
-  const handleBookmark = (courseId: string) => {
+  const handleBookmark = useCallback((courseId: string) => {
     console.log("Bookmark clicked for course:", courseId);
     toggleBookmark(courseId);
     setRenderCount(prev => prev + 1); // Force re-render
-  };
+  }, [toggleBookmark]);
 
   // Use useMemo to cache filtered courses and prevent infinite loops
   const filteredCourses = useMemo(() => {
@@ -173,13 +189,28 @@ export default function Home() {
     );
   }, [courses, searchQuery]);
 
-  const renderCourseItem = ({ item }: { item: Course }) => (
+  // Memoized render function with useCallback
+  const renderCourseItem = useCallback(({ item }: { item: Course }) => (
     <CourseItem
       item={item}
       onPress={() => router.push(`/course/${item.id}`)}
       onBookmark={() => handleBookmark(item.id)}
     />
-  );
+  ), [router, handleBookmark]);
+
+  // Memoized key extractor
+  const keyExtractor = useCallback((item: Course) => item.id, []);
+
+  // Memoized empty component
+  const ListEmptyComponent = useMemo(() => (
+    <View className="items-center justify-center py-20">
+      <Ionicons name="search-outline" size={64} color="#D1D5DB" />
+      <Text className="text-gray-500 text-lg mt-4">No courses found</Text>
+      <Text className="text-gray-400 text-sm mt-2">
+        Try adjusting your search
+      </Text>
+    </View>
+  ), []);
 
   if (loading && courses.length === 0) {
     return (
@@ -236,7 +267,7 @@ export default function Home() {
       <FlatList
         data={filteredCourses}
         renderItem={renderCourseItem}
-        keyExtractor={(item) => `${item.id}-${renderCount}`}
+        keyExtractor={keyExtractor}
         extraData={renderCount}
         contentContainerStyle={{ padding: 16 }}
         refreshControl={
@@ -247,16 +278,19 @@ export default function Home() {
             tintColor="#3B82F6"
           />
         }
-        ListEmptyComponent={
-          <View className="items-center justify-center py-20">
-            <Ionicons name="search-outline" size={64} color="#D1D5DB" />
-            <Text className="text-gray-500 text-lg mt-4">No courses found</Text>
-            <Text className="text-gray-400 text-sm mt-2">
-              Try adjusting your search
-            </Text>
-          </View>
-        }
+        ListEmptyComponent={ListEmptyComponent}
         showsVerticalScrollIndicator={false}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={10}
+        windowSize={10}
+        getItemLayout={(data, index) => ({
+          length: 380, // Approximate item height
+          offset: 380 * index,
+          index,
+        })}
       />
     </View>
   );
