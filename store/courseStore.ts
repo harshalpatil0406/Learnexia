@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { getCourses, getInstructors } from "../services/courseService";
 import { Course, Instructor } from "../types/course";
+import { notificationService } from "../services/notificationService";
 
 const BOOKMARKS_KEY = "bookmarked_courses";
 const ENROLLED_KEY = "enrolled_courses";
@@ -126,6 +127,16 @@ export const useCourseStore = create<CourseState>((set, get) => ({
       updatedBookmarks = bookmarkedCourses.filter((id) => id !== courseId);
     } else {
       updatedBookmarks = [...bookmarkedCourses, courseId];
+
+      // Show notification when user bookmarks 5+ courses
+      if (updatedBookmarks.length === 5) {
+        await notificationService.showBookmarkMilestoneNotification(5);
+      } else if (updatedBookmarks.length === 10) {
+        await notificationService.showBookmarkMilestoneNotification(10);
+      } else if (updatedBookmarks.length === 20) {
+        await notificationService.showBookmarkMilestoneNotification(20);
+      }
+      
     }
 
     console.log("Updated bookmarks:", updatedBookmarks);

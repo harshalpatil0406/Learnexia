@@ -3,7 +3,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, Switch, Text, View } from "react-native";
-import { useTheme } from "../../contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { notificationService } from "@/services/notificationService";
 
 const SETTINGS_KEY = "app_settings";
 
@@ -34,8 +35,13 @@ export default function Settings() {
 
   useEffect(() => {
     loadSettings();
+    checkNotificationPermission();
   }, []);
 
+    const checkNotificationPermission = async () => {
+    const hasPermission = await notificationService.hasPermissions();
+    setNotificationPermission(hasPermission);
+  };
 
   const loadSettings = async () => {
     try {
@@ -63,7 +69,25 @@ export default function Settings() {
   const toggleSetting = (key: keyof AppSettings) => {
     const newSettings = { ...settings, [key]: !settings[key] };
     
+    // If turning on notifications, request permission
+    if (key === "notifications" && !settings[key]) {
+      requestNotificationPermission();
+    }
+
     saveSettings(newSettings);
+  };
+
+  const requestNotificationPermission = async () => {
+    const granted = await notificationService.requestPermissions();
+    setNotificationPermission(granted);
+    
+    if (!granted) {
+      Alert.alert(
+        "Permission Denied",
+        "Please enable notifications in your device settings to receive updates.",
+        [{ text: "OK" }]
+      );
+    }
   };
 
   const handleClearCache = () => {
