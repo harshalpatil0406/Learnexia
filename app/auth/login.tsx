@@ -20,7 +20,7 @@ export default function Login() {
 
     try {
       await login(email, password);
-      router.replace("/home");
+      router.replace("/(tabs)/home");
     } catch (error: any) {
       Alert.alert("Login Failed", error?.message || "Invalid credentials");
     }

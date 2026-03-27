@@ -12,7 +12,7 @@ export default function Index() {
       const token = await getToken();
 
       if (token) {
-        router.replace("/home");
+        router.replace("/(tabs)/home");
       } else {
         router.replace("/auth/login");
       }
