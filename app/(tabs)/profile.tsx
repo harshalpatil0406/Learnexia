@@ -225,7 +225,8 @@ export default function Profile() {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
+            onPress={() => router.push("/profile/bookmarks")}
             className="flex-row items-center p-4 border-b border-gray-100"
           >
             <View className="bg-green-50 p-3 rounded-full mr-4">
