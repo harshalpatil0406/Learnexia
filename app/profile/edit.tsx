@@ -3,11 +3,13 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 import { useAuthStore } from "../../store/authStore";
 
 export default function EditProfile() {
   const router = useRouter();
   const { user, uploadAvatar, updateUser, loading } = useAuthStore();
+  const { isDark } = useTheme();
   
   const [username, setUsername] = useState(user?.username || "");
   const [email, setEmail] = useState(user?.email || "");
@@ -70,7 +72,7 @@ export default function EditProfile() {
   };
 
   const handleSave = async () => {
-
+    // Validate inputs
     if (!username.trim()) {
       Alert.alert("Error", "Username cannot be empty");
       return;
@@ -81,6 +83,7 @@ export default function EditProfile() {
       return;
     }
 
+    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert("Error", "Please enter a valid email address");
@@ -90,12 +93,12 @@ export default function EditProfile() {
     setSaving(true);
 
     try {
-
+      // Upload avatar if changed
       if (localImage) {
         await uploadAvatar(localImage);
       }
 
-
+      // Update user info if changed
       if (username !== user?.username || email !== user?.email) {
         await updateUser({ username, email });
       }
@@ -137,9 +140,9 @@ export default function EditProfile() {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Header */}
-      <View className="bg-blue-500 pt-16 pb-6 px-6">
+      <View className={`${isDark ? 'bg-gray-800' : 'bg-blue-500'} pt-16 pb-6 px-6`}>
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center flex-1">
             <Pressable
@@ -158,15 +161,15 @@ export default function EditProfile() {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-6 mt-4">
           {/* Profile Picture Section */}
-          <View className="bg-white rounded-3xl shadow-lg p-6 mb-6">
-            <Text className="text-gray-800 text-lg font-bold mb-4">
+          <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-3xl shadow-lg p-6 mb-6`}>
+            <Text className={`${isDark ? 'text-white' : 'text-gray-800'} text-lg font-bold mb-4`}>
               Profile Picture
             </Text>
             
             <View className="items-center">
               <View style={{ position: 'relative' }}>
                 {loading ? (
-                  <View className="w-32 h-32 rounded-full bg-gray-200 items-center justify-center border-4 border-white shadow-lg">
+                  <View className={`w-32 h-32 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'} items-center justify-center border-4 ${isDark ? 'border-gray-800' : 'border-white'} shadow-lg`}>
                     <ActivityIndicator size="large" color="#3B82F6" />
                   </View>
                 ) : (
@@ -184,28 +187,28 @@ export default function EditProfile() {
                   <Ionicons name="camera" size={20} color="white" />
                 </TouchableOpacity>
               </View>
-              <Text className="text-gray-500 text-sm mt-4 text-center">
+              <Text className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm mt-4 text-center`}>
                 Tap the camera icon to change your profile picture
               </Text>
             </View>
           </View>
 
           {/* Personal Information Section */}
-          <View className="bg-white rounded-3xl shadow-lg p-6 mb-6">
-            <Text className="text-gray-800 text-lg font-bold mb-4">
+          <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-3xl shadow-lg p-6 mb-6`}>
+            <Text className={`${isDark ? 'text-white' : 'text-gray-800'} text-lg font-bold mb-4`}>
               Personal Information
             </Text>
 
             {/* Username Field */}
             <View className="mb-4">
-              <Text className="text-gray-700 font-semibold mb-2">Username</Text>
-              <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-3 border border-gray-200">
-                <Ionicons name="person-outline" size={20} color="#6B7280" />
+              <Text className={`${isDark ? 'text-gray-300' : 'text-gray-700'} font-semibold mb-2`}>Username</Text>
+              <View className={`flex-row items-center ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} rounded-2xl px-4 py-3 border`}>
+                <Ionicons name="person-outline" size={20} color={isDark ? '#9CA3AF' : '#6B7280'} />
                 <TextInput
                   value={username}
                   onChangeText={setUsername}
                   placeholder="Enter username"
-                  className="flex-1 ml-3 text-gray-800"
+                  className={`flex-1 ml-3 ${isDark ? 'text-white' : 'text-gray-800'}`}
                   placeholderTextColor="#9CA3AF"
                   autoCapitalize="none"
                 />
@@ -214,14 +217,14 @@ export default function EditProfile() {
 
             {/* Email Field */}
             <View className="mb-4">
-              <Text className="text-gray-700 font-semibold mb-2">Email</Text>
-              <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-3 border border-gray-200">
-                <Ionicons name="mail-outline" size={20} color="#6B7280" />
+              <Text className={`${isDark ? 'text-gray-300' : 'text-gray-700'} font-semibold mb-2`}>Email</Text>
+              <View className={`flex-row items-center ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} rounded-2xl px-4 py-3 border`}>
+                <Ionicons name="mail-outline" size={20} color={isDark ? '#9CA3AF' : '#6B7280'} />
                 <TextInput
                   value={email}
                   onChangeText={setEmail}
                   placeholder="Enter email"
-                  className="flex-1 ml-3 text-gray-800"
+                  className={`flex-1 ml-3 ${isDark ? 'text-white' : 'text-gray-800'}`}
                   placeholderTextColor="#9CA3AF"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -232,36 +235,36 @@ export default function EditProfile() {
 
             {/* Role Field (Read-only) */}
             <View>
-              <Text className="text-gray-700 font-semibold mb-2">Role</Text>
-              <View className="flex-row items-center bg-gray-100 rounded-2xl px-4 py-3 border border-gray-200">
-                <Ionicons name="shield-checkmark-outline" size={20} color="#6B7280" />
-                <Text className="flex-1 ml-3 text-gray-500">
+              <Text className={`${isDark ? 'text-gray-300' : 'text-gray-700'} font-semibold mb-2`}>Role</Text>
+              <View className={`flex-row items-center ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 border-gray-200'} rounded-2xl px-4 py-3 border`}>
+                <Ionicons name="shield-checkmark-outline" size={20} color={isDark ? '#9CA3AF' : '#6B7280'} />
+                <Text className={`flex-1 ml-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                   {user?.role || "Student"}
                 </Text>
-                <View className="bg-blue-100 px-3 py-1 rounded-full">
-                  <Text className="text-blue-600 text-xs font-semibold">Read-only</Text>
+                <View className={`${isDark ? 'bg-blue-900' : 'bg-blue-100'} px-3 py-1 rounded-full`}>
+                  <Text className={`${isDark ? 'text-blue-300' : 'text-blue-600'} text-xs font-semibold`}>Read-only</Text>
                 </View>
               </View>
             </View>
           </View>
 
           {/* Account Information */}
-          <View className="bg-white rounded-3xl shadow-lg p-6 mb-6">
-            <Text className="text-gray-800 text-lg font-bold mb-4">
+          <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-3xl shadow-lg p-6 mb-6`}>
+            <Text className={`${isDark ? 'text-white' : 'text-gray-800'} text-lg font-bold mb-4`}>
               Account Information
             </Text>
 
-            <View className="flex-row items-center justify-between py-3 border-b border-gray-100">
-              <Text className="text-gray-600">Account Created</Text>
-              <Text className="text-gray-800 font-semibold">
+            <View className={`flex-row items-center justify-between py-3 border-b ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
+              <Text className={isDark ? 'text-gray-400' : 'text-gray-600'}>Account Created</Text>
+              <Text className={`${isDark ? 'text-white' : 'text-gray-800'} font-semibold`}>
                 {new Date().toLocaleDateString()}
               </Text>
             </View>
 
             <View className="flex-row items-center justify-between py-3">
-              <Text className="text-gray-600">Account Status</Text>
-              <View className="bg-green-100 px-3 py-1 rounded-full">
-                <Text className="text-green-600 font-semibold text-xs">Active</Text>
+              <Text className={isDark ? 'text-gray-400' : 'text-gray-600'}>Account Status</Text>
+              <View className={`${isDark ? 'bg-green-900' : 'bg-green-100'} px-3 py-1 rounded-full`}>
+                <Text className={`${isDark ? 'text-green-300' : 'text-green-600'} font-semibold text-xs`}>Active</Text>
               </View>
             </View>
           </View>
