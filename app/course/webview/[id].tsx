@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import WebView from "react-native-webview";
+import { WebViewSkeleton } from "../../../components/WebViewSkeleton";
+import { useTheme } from "../../../contexts/ThemeContext";
 import { useCourseStore } from "../../../store/courseStore";
 
 export default function CourseWebView() {
@@ -10,9 +12,9 @@ export default function CourseWebView() {
   const router = useRouter();
   const webViewRef = useRef<WebView>(null);
   const { courses } = useCourseStore();
+  const { isDark } = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
 
   const course = courses.find((c) => c.id === id);
 
@@ -46,7 +48,6 @@ export default function CourseWebView() {
 
   const handleRefresh = () => {
     setError(null);
-    setRetryCount(0);
     if (webViewRef.current) {
       webViewRef.current.reload();
     }
@@ -96,9 +97,9 @@ export default function CourseWebView() {
 
   if (!course) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Ionicons name="alert-circle-outline" size={64} color="#D1D5DB" />
-        <Text className="text-gray-500 text-lg mt-4">Course not found</Text>
+      <View className={`flex-1 items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+        <Ionicons name="alert-circle-outline" size={64} color={isDark ? '#4B5563' : '#D1D5DB'} />
+        <Text className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-lg mt-4`}>Course not found</Text>
         <Pressable
           onPress={() => router.back()}
           className="bg-blue-500 px-6 py-3 rounded-full mt-6"
@@ -109,7 +110,7 @@ export default function CourseWebView() {
     );
   }
 
-  // Read the HTML template
+  // Generate HTML template with theme support
   const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
@@ -126,38 +127,38 @@ export default function CourseWebView() {
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: ${isDark ? 'linear-gradient(135deg, #1F2937 0%, #111827 100%)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
             padding: 20px;
-            color: #333;
+            color: ${isDark ? '#E5E7EB' : '#333'};
         }
         
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background: white;
+            background: ${isDark ? '#1F2937' : 'white'};
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, ${isDark ? '0.5' : '0.3'});
         }
         
         .header {
             text-align: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
+            border-bottom: 2px solid ${isDark ? '#374151' : '#f0f0f0'};
         }
         
         .course-title {
             font-size: 28px;
             font-weight: bold;
-            color: #1f2937;
+            color: ${isDark ? '#F9FAFB' : '#1f2937'};
             margin-bottom: 10px;
         }
         
         .course-category {
             display: inline-block;
-            background: #dbeafe;
-            color: #2563eb;
+            background: ${isDark ? '#1E3A8A' : '#dbeafe'};
+            color: ${isDark ? '#93C5FD' : '#2563eb'};
             padding: 8px 16px;
             border-radius: 20px;
             font-size: 14px;
@@ -167,7 +168,7 @@ export default function CourseWebView() {
         .instructor-info {
             display: flex;
             align-items: center;
-            background: #f9fafb;
+            background: ${isDark ? '#374151' : '#f9fafb'};
             padding: 20px;
             border-radius: 15px;
             margin-bottom: 30px;
@@ -179,17 +180,29 @@ export default function CourseWebView() {
             border-radius: 50%;
             margin-right: 15px;
             border: 3px solid #3b82f6;
+            flex-shrink: 0;
+        }
+        
+        .instructor-details {
+            flex: 1;
+            min-width: 0;
         }
         
         .instructor-details h3 {
             font-size: 18px;
-            color: #1f2937;
+            color: ${isDark ? '#F9FAFB' : '#1f2937'};
             margin-bottom: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         
         .instructor-details p {
-            color: #6b7280;
+            color: ${isDark ? '#9CA3AF' : '#6b7280'};
             font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         
         .section {
@@ -199,7 +212,7 @@ export default function CourseWebView() {
         .section-title {
             font-size: 20px;
             font-weight: bold;
-            color: #1f2937;
+            color: ${isDark ? '#F9FAFB' : '#1f2937'};
             margin-bottom: 15px;
             display: flex;
             align-items: center;
@@ -215,7 +228,7 @@ export default function CourseWebView() {
         }
         
         .description {
-            color: #4b5563;
+            color: ${isDark ? '#D1D5DB' : '#4b5563'};
             line-height: 1.8;
             font-size: 16px;
         }
@@ -225,7 +238,7 @@ export default function CourseWebView() {
         }
         
         .lesson-item {
-            background: #f9fafb;
+            background: ${isDark ? '#374151' : '#f9fafb'};
             padding: 15px;
             margin-bottom: 10px;
             border-radius: 10px;
@@ -250,12 +263,12 @@ export default function CourseWebView() {
         
         .lesson-title {
             flex: 1;
-            color: #1f2937;
+            color: ${isDark ? '#F9FAFB' : '#1f2937'};
             font-weight: 500;
         }
         
         .lesson-duration {
-            color: #6b7280;
+            color: ${isDark ? '#9CA3AF' : '#6b7280'};
             font-size: 14px;
         }
         
@@ -297,7 +310,7 @@ export default function CourseWebView() {
         }
         
         .message-from-native {
-            background: #fef3c7;
+            background: ${isDark ? '#374151' : '#fef3c7'};
             border-left: 4px solid #f59e0b;
             padding: 15px;
             border-radius: 8px;
@@ -311,12 +324,12 @@ export default function CourseWebView() {
         
         .message-title {
             font-weight: bold;
-            color: #92400e;
+            color: ${isDark ? '#FCD34D' : '#92400e'};
             margin-bottom: 5px;
         }
         
         .message-content {
-            color: #78350f;
+            color: ${isDark ? '#FDE68A' : '#78350f'};
         }
     </style>
 </head>
@@ -441,9 +454,9 @@ export default function CourseWebView() {
   `;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
       {/* Header */}
-      <View className="bg-blue-500 pt-14 pb-4 px-4 flex-row items-center justify-between">
+      <View className={`${isDark ? 'bg-gray-800' : 'bg-blue-500'} pt-14 pb-4 px-4 flex-row items-center justify-between`}>
         <Pressable
           onPress={() => router.back()}
           className="bg-white/20 p-2 rounded-full"
@@ -474,12 +487,12 @@ export default function CourseWebView() {
 
       {/* WebView */}
       {error ? (
-        <View className="flex-1 items-center justify-center bg-white px-6">
+        <View className={`flex-1 items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-white'} px-6`}>
           <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-          <Text className="text-gray-800 text-xl font-bold mt-4">
+          <Text className={`${isDark ? 'text-white' : 'text-gray-800'} text-xl font-bold mt-4`}>
             Failed to Load Content
           </Text>
-          <Text className="text-gray-600 text-center mt-2">
+          <Text className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-center mt-2`}>
             {error}
           </Text>
           <Pressable
@@ -497,47 +510,44 @@ export default function CourseWebView() {
           </Pressable>
         </View>
       ) : (
-        <WebView
-          ref={webViewRef}
-          source={{ html: htmlContent }}
-          style={{ flex: 1 }}
-          onLoadStart={() => {
-            setLoading(true);
-            setError(null);
-          }}
-          onLoadEnd={handleLoadEnd}
-          onError={handleWebViewError}
-          onHttpError={handleHttpError}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          startInLoadingState={true}
-          renderLoading={() => (
-            <View className="flex-1 items-center justify-center bg-white">
-              <ActivityIndicator size="large" color="#3B82F6" />
-              <Text className="text-gray-600 mt-4">Loading content...</Text>
-            </View>
-          )}
-          renderError={(errorDomain, errorCode, errorDesc) => (
-            <View className="flex-1 items-center justify-center bg-white px-6">
-              <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-              <Text className="text-gray-800 text-xl font-bold mt-4">
-                WebView Error
-              </Text>
-              <Text className="text-gray-600 text-center mt-2">
-                {errorDesc}
-              </Text>
-              <Text className="text-gray-400 text-sm mt-1">
-                Error Code: {errorCode}
-              </Text>
-              <Pressable
-                onPress={handleRefresh}
-                className="bg-blue-500 px-6 py-3 rounded-full mt-6"
-              >
-                <Text className="text-white font-semibold">Retry</Text>
-              </Pressable>
-            </View>
-          )}
-        />
+        <>
+          {loading && <WebViewSkeleton isDark={isDark} />}
+          <WebView
+            ref={webViewRef}
+            source={{ html: htmlContent }}
+            style={{ flex: 1, opacity: loading ? 0 : 1 }}
+            onLoadStart={() => {
+              setLoading(true);
+              setError(null);
+            }}
+            onLoadEnd={handleLoadEnd}
+            onError={handleWebViewError}
+            onHttpError={handleHttpError}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={false}
+            renderError={(_errorDomain, errorCode, errorDesc) => (
+              <View className={`flex-1 items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-white'} px-6`}>
+                <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
+                <Text className={`${isDark ? 'text-white' : 'text-gray-800'} text-xl font-bold mt-4`}>
+                  WebView Error
+                </Text>
+                <Text className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-center mt-2`}>
+                  {errorDesc}
+                </Text>
+                <Text className={`${isDark ? 'text-gray-500' : 'text-gray-400'} text-sm mt-1`}>
+                  Error Code: {errorCode}
+                </Text>
+                <Pressable
+                  onPress={handleRefresh}
+                  className="bg-blue-500 px-6 py-3 rounded-full mt-6"
+                >
+                  <Text className="text-white font-semibold">Retry</Text>
+                </Pressable>
+              </View>
+            )}
+          />
+        </>
       )}
     </View>
   );
