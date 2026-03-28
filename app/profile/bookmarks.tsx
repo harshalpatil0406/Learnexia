@@ -4,24 +4,27 @@ import { useState } from "react";
 import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { useCourseStore } from "../../store/courseStore";
 import { Course } from "../../types/course";
+import { useTheme } from "../../contexts/ThemeContext";
 
 // Separate component for bookmarked course item
 function BookmarkedCourseItem({ 
   item, 
   onPress, 
-  onRemoveBookmark 
+  onRemoveBookmark,
+  isDark
 }: { 
   item: Course; 
   onPress: () => void; 
   onRemoveBookmark: () => void;
+  isDark: boolean;
 }) {
   const [imageError, setImageError] = useState(false);
 
   return (
-    <View className="bg-white rounded-2xl mb-4 shadow-sm overflow-hidden">
+    <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-2xl mb-4 shadow-sm overflow-hidden`}>
       <Pressable onPress={onPress} className="flex-row">
         {/* Course Thumbnail */}
-        <View className="w-32 h-32 bg-gray-200">
+        <View className={`w-32 h-32 ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
           {!imageError && item.thumbnail ? (
             <Image
               source={{ uri: item.thumbnail }}
@@ -39,14 +42,14 @@ function BookmarkedCourseItem({
         {/* Course Info */}
         <View className="flex-1 p-4">
           {/* Category Badge */}
-          <View className="bg-blue-50 self-start px-2 py-1 rounded-full mb-2">
-            <Text className="text-blue-600 text-xs font-semibold">
+          <View className={`${isDark ? 'bg-blue-900' : 'bg-blue-50'} self-start px-2 py-1 rounded-full mb-2`}>
+            <Text className={`${isDark ? 'text-blue-300' : 'text-blue-600'} text-xs font-semibold`}>
               {item.category}
             </Text>
           </View>
 
           {/* Course Title */}
-          <Text className="text-base font-bold text-gray-800 mb-1" numberOfLines={2}>
+          <Text className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-800'} mb-1`} numberOfLines={2}>
             {item.title}
           </Text>
 
@@ -57,7 +60,7 @@ function BookmarkedCourseItem({
                 source={{ uri: item.instructor.avatar }}
                 className="w-5 h-5 rounded-full mr-2"
               />
-              <Text className="text-gray-600 text-xs flex-1" numberOfLines={1}>
+              <Text className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs flex-1`} numberOfLines={1}>
                 {item.instructor.name}
               </Text>
             </View>
@@ -65,8 +68,8 @@ function BookmarkedCourseItem({
 
           {/* Price */}
           <View className="flex-row items-center justify-between mt-2">
-            <View className="bg-green-50 px-2 py-1 rounded-full">
-              <Text className="text-green-600 font-bold text-xs">
+            <View className={`${isDark ? 'bg-green-900' : 'bg-green-50'} px-2 py-1 rounded-full`}>
+              <Text className={`${isDark ? 'text-green-300' : 'text-green-600'} font-bold text-xs`}>
                 ${item.price}
               </Text>
             </View>
@@ -100,6 +103,7 @@ function BookmarkedCourseItem({
 export default function Bookmarks() {
   const router = useRouter();
   const { courses, bookmarkedCourses, toggleBookmark } = useCourseStore();
+  const { isDark } = useTheme();
   const [renderCount, setRenderCount] = useState(0);
 
   // Filter bookmarked courses
@@ -117,13 +121,14 @@ export default function Bookmarks() {
       item={item}
       onPress={() => router.push(`/course/${item.id}`)}
       onRemoveBookmark={() => handleRemoveBookmark(item.id)}
+      isDark={isDark}
     />
   );
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Header */}
-      <View className="bg-blue-500 pt-16 pb-6 px-6">
+      <View className={`${isDark ? 'bg-gray-800' : 'bg-blue-500'} pt-16 pb-6 px-6`}>
         <View className="flex-row items-center mb-2">
           <Pressable
             onPress={() => router.back()}
@@ -152,14 +157,14 @@ export default function Bookmarks() {
         />
       ) : (
         <View className="flex-1 items-center justify-center px-6">
-          <View className="bg-white rounded-3xl p-8 items-center shadow-sm">
-            <View className="bg-blue-50 w-24 h-24 rounded-full items-center justify-center mb-4">
+          <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-3xl p-8 items-center shadow-sm`}>
+            <View className={`${isDark ? 'bg-blue-900' : 'bg-blue-50'} w-24 h-24 rounded-full items-center justify-center mb-4`}>
               <Ionicons name="bookmark-outline" size={48} color="#3B82F6" />
             </View>
-            <Text className="text-gray-800 text-xl font-bold mb-2">
+            <Text className={`${isDark ? 'text-white' : 'text-gray-800'} text-xl font-bold mb-2`}>
               No Bookmarks Yet
             </Text>
-            <Text className="text-gray-500 text-center mb-6">
+            <Text className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-center mb-6`}>
               Start bookmarking courses you're interested in to see them here
             </Text>
             <Pressable
