@@ -60,13 +60,31 @@ export const useCourseStore = create<CourseState>((set, get) => ({
       const courses: Course[] = coursesData.map((product: any, index: number) => {
         const instructor = instructors[index % instructors.length];
         
-        // Try to get the best available image
-        let thumbnail = "https://via.placeholder.com/300x200/3B82F6/FFFFFF?text=Course";
-        if (product.images && product.images.length > 0) {
-          thumbnail = product.images[0]; // Use first full image instead of thumbnail
-        } else if (product.thumbnail) {
-          thumbnail = product.thumbnail;
-        }
+        // Use educational-themed Unsplash images
+        const educationalImages = [
+          "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80", // laptop coding
+          "https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=800&q=80", // books and coffee
+          "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80", // people studying
+          "https://images.unsplash.com/photo-1513258496099-48168024aec0?w=800&q=80", // macbook desk
+          "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80", // classroom
+          "https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=800&q=80", // person with laptop
+          "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&q=80", // team working
+          "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80", // laptop on desk
+          "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&q=80", // books stack
+          "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&q=80", // notebook and pen
+          "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&q=80", // books on shelf
+          "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80", // desk with notes
+          "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80", // students studying
+          "https://images.unsplash.com/photo-1517842645767-c639042777db?w=800&q=80", // library
+          "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=800&q=80", // online learning
+          "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&q=80", // workspace
+          "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80", // team collaboration
+          "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?w=800&q=80", // study desk
+          "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800&q=80", // education concept
+          "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80", // coding screen
+        ];
+        
+        const thumbnail = educationalImages[index % educationalImages.length];
         
         const course = {
           id: product.id?.toString() || `course-${index}`,
