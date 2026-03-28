@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useAuthStore } from "../../store/authStore";
+import { getErrorMessage } from "../../services/api";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -22,7 +23,7 @@ export default function Login() {
       await login(email, password);
       router.replace("/(tabs)/home");
     } catch (error: any) {
-      Alert.alert("Login Failed", error?.message || "Invalid credentials");
+      Alert.alert("Login Failed", getErrorMessage(error));
     }
   };
 

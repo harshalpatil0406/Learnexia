@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { registerUser } from "../../services/authService";
+import { getErrorMessage } from "../../services/api";
 
 export default function Register() {
   const router = useRouter();
@@ -48,10 +49,7 @@ export default function Register() {
       router.replace("/auth/login");
     } catch (error: any) {
       setLoading(false);
-      Alert.alert(
-        "Error",
-        error.response?.data?.message || "Registration failed"
-      );
+      Alert.alert("Registration Failed", getErrorMessage(error));
     }
   };
 

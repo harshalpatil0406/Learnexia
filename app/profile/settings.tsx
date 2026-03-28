@@ -3,8 +3,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, Switch, Text, View } from "react-native";
-import { useTheme } from "@/contexts/ThemeContext";
-import { notificationService } from "@/services/notificationService";
+import { useTheme } from "../../contexts/ThemeContext";
+import { notificationService } from "../../services/notificationService";
 
 const SETTINGS_KEY = "app_settings";
 
@@ -38,7 +38,7 @@ export default function Settings() {
     checkNotificationPermission();
   }, []);
 
-    const checkNotificationPermission = async () => {
+  const checkNotificationPermission = async () => {
     const hasPermission = await notificationService.hasPermissions();
     setNotificationPermission(hasPermission);
   };
@@ -73,7 +73,7 @@ export default function Settings() {
     if (key === "notifications" && !settings[key]) {
       requestNotificationPermission();
     }
-
+    
     saveSettings(newSettings);
   };
 
@@ -143,7 +143,7 @@ export default function Settings() {
   return (
     <View className={`flex-1 ${bgColor}`}>
       {/* Header */}
-      <View className="bg-blue-500 pt-16 pb-6 px-6">
+      <View className={`${isDark ? 'bg-gray-800' : 'bg-blue-500'} pt-16 pb-6 px-6`}>
         <View className="flex-row items-center">
           <Pressable
             onPress={() => router.back()}

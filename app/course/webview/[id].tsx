@@ -11,15 +11,17 @@ export default function CourseWebView() {
   const webViewRef = useRef<WebView>(null);
   const { courses } = useCourseStore();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const course = courses.find((c) => c.id === id);
 
   useEffect(() => {
     // Send course data to WebView once it's loaded
-    if (course && webViewRef.current && !loading) {
+    if (course && webViewRef.current && !loading && !error) {
       sendDataToWebView();
     }
-  }, [course, loading]);
+  }, [course, loading, error]);
 
   const sendDataToWebView = () => {
     if (!course || !webViewRef.current) return;
@@ -43,9 +45,34 @@ export default function CourseWebView() {
   };
 
   const handleRefresh = () => {
+    setError(null);
+    setRetryCount(0);
     if (webViewRef.current) {
       webViewRef.current.reload();
     }
+  };
+
+  const handleWebViewError = (syntheticEvent: any) => {
+    const { nativeEvent } = syntheticEvent;
+    console.error("WebView error:", nativeEvent);
+    
+    setLoading(false);
+    setError(nativeEvent.description || "Failed to load content");
+  };
+
+  const handleHttpError = (syntheticEvent: any) => {
+    const { nativeEvent } = syntheticEvent;
+    console.error("WebView HTTP error:", nativeEvent);
+    
+    setLoading(false);
+    setError(`HTTP Error ${nativeEvent.statusCode}: ${nativeEvent.description || "Failed to load content"}`);
+  };
+
+  const handleLoadEnd = () => {
+    setLoading(false);
+    setError(null);
+    // Send initial data after WebView loads
+    setTimeout(() => sendDataToWebView(), 500);
   };
 
   const handleSendMessage = () => {
@@ -446,26 +473,72 @@ export default function CourseWebView() {
       </View>
 
       {/* WebView */}
-      <WebView
-        ref={webViewRef}
-        source={{ html: htmlContent }}
-        style={{ flex: 1 }}
-        onLoadStart={() => setLoading(true)}
-        onLoadEnd={() => {
-          setLoading(false);
-          // Send initial data after WebView loads
-          setTimeout(() => sendDataToWebView(), 500);
-        }}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
-        startInLoadingState={true}
-        renderLoading={() => (
-          <View className="flex-1 items-center justify-center bg-white">
-            <ActivityIndicator size="large" color="#3B82F6" />
-            <Text className="text-gray-600 mt-4">Loading content...</Text>
-          </View>
-        )}
-      />
+      {error ? (
+        <View className="flex-1 items-center justify-center bg-white px-6">
+          <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
+          <Text className="text-gray-800 text-xl font-bold mt-4">
+            Failed to Load Content
+          </Text>
+          <Text className="text-gray-600 text-center mt-2">
+            {error}
+          </Text>
+          <Pressable
+            onPress={handleRefresh}
+            className="bg-blue-500 px-6 py-3 rounded-full mt-6 flex-row items-center"
+          >
+            <Ionicons name="refresh" size={20} color="white" />
+            <Text className="text-white font-semibold ml-2">Try Again</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => router.back()}
+            className="mt-4"
+          >
+            <Text className="text-blue-500 font-semibold">Go Back</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <WebView
+          ref={webViewRef}
+          source={{ html: htmlContent }}
+          style={{ flex: 1 }}
+          onLoadStart={() => {
+            setLoading(true);
+            setError(null);
+          }}
+          onLoadEnd={handleLoadEnd}
+          onError={handleWebViewError}
+          onHttpError={handleHttpError}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          startInLoadingState={true}
+          renderLoading={() => (
+            <View className="flex-1 items-center justify-center bg-white">
+              <ActivityIndicator size="large" color="#3B82F6" />
+              <Text className="text-gray-600 mt-4">Loading content...</Text>
+            </View>
+          )}
+          renderError={(errorDomain, errorCode, errorDesc) => (
+            <View className="flex-1 items-center justify-center bg-white px-6">
+              <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
+              <Text className="text-gray-800 text-xl font-bold mt-4">
+                WebView Error
+              </Text>
+              <Text className="text-gray-600 text-center mt-2">
+                {errorDesc}
+              </Text>
+              <Text className="text-gray-400 text-sm mt-1">
+                Error Code: {errorCode}
+              </Text>
+              <Pressable
+                onPress={handleRefresh}
+                className="bg-blue-500 px-6 py-3 rounded-full mt-6"
+              >
+                <Text className="text-white font-semibold">Retry</Text>
+              </Pressable>
+            </View>
+          )}
+        />
+      )}
     </View>
   );
 }

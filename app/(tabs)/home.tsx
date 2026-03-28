@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Pressable, RefreshControl, Text, TextInput, View } from "react-native";
 import { useCourseStore } from "../../store/courseStore";
 import { Course } from "../../types/course";
+import { getErrorMessage } from "../../services/api";
 
 // Memoized course item component for better performance
 // Using a Map to track image errors persistently across re-renders
@@ -136,7 +137,7 @@ export default function Home() {
   const fetchCourses = useCourseStore((state) => state.fetchCourses);
   const toggleBookmark = useCourseStore((state) => state.toggleBookmark);
   const setSearchQuery = useCourseStore((state) => state.setSearchQuery);
-  const initializeStorage = useCourseStore((state) => state.initializeStorage);
+//   const initializeStorage = useCourseStore((state) => state.initializeStorage);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -149,7 +150,7 @@ export default function Home() {
         setError(null);
       } catch (err: any) {
         console.error("Initialization error:", err);
-        setError(err?.message || "Failed to load courses");
+        setError(getErrorMessage(err));
       }
     };
     initialize();
@@ -161,7 +162,7 @@ export default function Home() {
       await fetchCourses();
       setError(null);
     } catch (err: any) {
-      setError(err?.message || "Failed to refresh courses");
+      setError(getErrorMessage(err));
     }
     setIsRefreshing(false);
   };
