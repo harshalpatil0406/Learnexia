@@ -2,21 +2,23 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 import { useCourseStore } from "../../store/courseStore";
 
 export default function CourseDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { courses, toggleBookmark, enrollCourse } = useCourseStore();
+  const { isDark } = useTheme();
   const [enrolling, setEnrolling] = useState(false);
 
   const course = courses.find((c) => c.id === id);
 
   if (!course) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Ionicons name="alert-circle-outline" size={64} color="#D1D5DB" />
-        <Text className="text-gray-500 text-lg mt-4">Course not found</Text>
+      <View className={`flex-1 items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+        <Ionicons name="alert-circle-outline" size={64} color={isDark ? '#4B5563' : '#D1D5DB'} />
+        <Text className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-lg mt-4`}>Course not found</Text>
         <Pressable
           onPress={() => router.back()}
           className="bg-blue-500 px-6 py-3 rounded-full mt-6"
@@ -58,7 +60,7 @@ export default function CourseDetails() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Course Image */}
         <View className="relative">
@@ -71,9 +73,9 @@ export default function CourseDetails() {
           {/* Back Button */}
           <TouchableOpacity
             onPress={() => router.back()}
-            className="absolute top-12 left-4 bg-white/90 p-2 rounded-full shadow-md"
+            className={`absolute top-12 left-4 ${isDark ? 'bg-gray-800/90' : 'bg-white/90'} p-2 rounded-full shadow-md`}
           >
-            <Ionicons name="arrow-back" size={24} color="#1F2937" />
+            <Ionicons name="arrow-back" size={24} color={isDark ? '#F3F4F6' : '#1F2937'} />
           </TouchableOpacity>
 
           {/* Action Buttons */}
@@ -81,20 +83,20 @@ export default function CourseDetails() {
             {/* WebView Button */}
             <TouchableOpacity
               onPress={() => router.push(`/course/webview/${course.id}`)}
-              className="bg-white/90 p-2 rounded-full shadow-md mr-2"
+              className={`${isDark ? 'bg-gray-800/90' : 'bg-white/90'} p-2 rounded-full shadow-md mr-2`}
             >
-              <Ionicons name="globe-outline" size={24} color="#1F2937" />
+              <Ionicons name="globe-outline" size={24} color={isDark ? '#F3F4F6' : '#1F2937'} />
             </TouchableOpacity>
 
             {/* Bookmark Button */}
             <TouchableOpacity
               onPress={handleBookmark}
-              className="bg-white/90 p-2 rounded-full shadow-md"
+              className={`${isDark ? 'bg-gray-800/90' : 'bg-white/90'} p-2 rounded-full shadow-md`}
             >
               <Ionicons
                 name={course.isBookmarked ? "bookmark" : "bookmark-outline"}
                 size={24}
-                color={course.isBookmarked ? "#3B82F6" : "#1F2937"}
+                color={course.isBookmarked ? "#3B82F6" : (isDark ? '#F3F4F6' : '#1F2937')}
               />
             </TouchableOpacity>
           </View>
@@ -111,28 +113,28 @@ export default function CourseDetails() {
         {/* Course Content */}
         <View className="p-6">
           {/* Category Badge */}
-          <View className="bg-blue-50 self-start px-4 py-2 rounded-full mb-3">
-            <Text className="text-blue-600 font-semibold">{course.category}</Text>
+          <View className={`${isDark ? 'bg-blue-900' : 'bg-blue-50'} self-start px-4 py-2 rounded-full mb-3`}>
+            <Text className={`${isDark ? 'text-blue-300' : 'text-blue-600'} font-semibold`}>{course.category}</Text>
           </View>
 
           {/* Course Title */}
-          <Text className="text-3xl font-bold text-gray-800 mb-4">
+          <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'} mb-4`}>
             {course.title}
           </Text>
 
           {/* Instructor Info */}
           {course.instructor && (
-            <View className="flex-row items-center mb-6 bg-gray-50 p-4 rounded-2xl">
+            <View className={`flex-row items-center mb-6 ${isDark ? 'bg-gray-800' : 'bg-gray-50'} p-4 rounded-2xl`}>
               <Image
                 source={{ uri: course.instructor.avatar }}
                 className="w-16 h-16 rounded-full mr-4"
               />
               <View className="flex-1">
-                <Text className="text-gray-500 text-sm mb-1">Instructor</Text>
-                <Text className="text-gray-800 font-bold text-lg">
+                <Text className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm mb-1`}>Instructor</Text>
+                <Text className={`${isDark ? 'text-white' : 'text-gray-800'} font-bold text-lg`}>
                   {course.instructor.name}
                 </Text>
-                <Text className="text-gray-500 text-sm">
+                <Text className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm`}>
                   @{course.instructor.username}
                 </Text>
               </View>
@@ -140,45 +142,45 @@ export default function CourseDetails() {
           )}
 
           {/* Course Stats */}
-          <View className="flex-row justify-around mb-6 bg-gray-50 p-4 rounded-2xl">
+          <View className={`flex-row justify-around mb-6 ${isDark ? 'bg-gray-800' : 'bg-gray-50'} p-4 rounded-2xl`}>
             <View className="items-center">
-              <View className="bg-blue-100 w-12 h-12 rounded-full items-center justify-center mb-2">
+              <View className={`${isDark ? 'bg-blue-900' : 'bg-blue-100'} w-12 h-12 rounded-full items-center justify-center mb-2`}>
                 <Ionicons name="time-outline" size={24} color="#3B82F6" />
               </View>
-              <Text className="text-gray-800 font-bold">12 Hours</Text>
-              <Text className="text-gray-500 text-xs">Duration</Text>
+              <Text className={`${isDark ? 'text-white' : 'text-gray-800'} font-bold`}>12 Hours</Text>
+              <Text className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-xs`}>Duration</Text>
             </View>
 
             <View className="items-center">
-              <View className="bg-purple-100 w-12 h-12 rounded-full items-center justify-center mb-2">
+              <View className={`${isDark ? 'bg-purple-900' : 'bg-purple-100'} w-12 h-12 rounded-full items-center justify-center mb-2`}>
                 <Ionicons name="play-circle-outline" size={24} color="#8B5CF6" />
               </View>
-              <Text className="text-gray-800 font-bold">24 Lessons</Text>
-              <Text className="text-gray-500 text-xs">Videos</Text>
+              <Text className={`${isDark ? 'text-white' : 'text-gray-800'} font-bold`}>24 Lessons</Text>
+              <Text className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-xs`}>Videos</Text>
             </View>
 
             <View className="items-center">
-              <View className="bg-green-100 w-12 h-12 rounded-full items-center justify-center mb-2">
+              <View className={`${isDark ? 'bg-green-900' : 'bg-green-100'} w-12 h-12 rounded-full items-center justify-center mb-2`}>
                 <Ionicons name="people-outline" size={24} color="#10B981" />
               </View>
-              <Text className="text-gray-800 font-bold">1.2k</Text>
-              <Text className="text-gray-500 text-xs">Students</Text>
+              <Text className={`${isDark ? 'text-white' : 'text-gray-800'} font-bold`}>1.2k</Text>
+              <Text className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-xs`}>Students</Text>
             </View>
           </View>
 
           {/* Description Section */}
           <View className="mb-6">
-            <Text className="text-xl font-bold text-gray-800 mb-3">
+            <Text className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'} mb-3`}>
               About This Course
             </Text>
-            <Text className="text-gray-600 leading-6">
+            <Text className={`${isDark ? 'text-gray-400' : 'text-gray-600'} leading-6`}>
               {course.description}
             </Text>
           </View>
 
           {/* What You'll Learn */}
           <View className="mb-6">
-            <Text className="text-xl font-bold text-gray-800 mb-3">
+            <Text className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'} mb-3`}>
               What You'll Learn
             </Text>
             <View className="space-y-3">
@@ -189,26 +191,26 @@ export default function CourseDetails() {
                 "Problem-solving and critical thinking skills",
               ].map((item, index) => (
                 <View key={index} className="flex-row items-start mb-3">
-                  <View className="bg-green-100 p-1 rounded-full mr-3 mt-1">
+                  <View className={`${isDark ? 'bg-green-900' : 'bg-green-100'} p-1 rounded-full mr-3 mt-1`}>
                     <Ionicons name="checkmark" size={16} color="#10B981" />
                   </View>
-                  <Text className="text-gray-700 flex-1">{item}</Text>
+                  <Text className={`${isDark ? 'text-gray-300' : 'text-gray-700'} flex-1`}>{item}</Text>
                 </View>
               ))}
             </View>
           </View>
 
           {/* Price Section */}
-          <View className="bg-blue-50 p-4 rounded-2xl mb-6">
+          <View className={`${isDark ? 'bg-blue-900' : 'bg-blue-50'} p-4 rounded-2xl mb-6`}>
             <View className="flex-row items-center justify-between">
               <View>
-                <Text className="text-gray-600 text-sm mb-1">Course Price</Text>
-                <Text className="text-3xl font-bold text-blue-600">
+                <Text className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm mb-1`}>Course Price</Text>
+                <Text className={`text-3xl font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
                   ${course.price}
                 </Text>
               </View>
-              <View className="bg-blue-100 px-4 py-2 rounded-full">
-                <Text className="text-blue-600 font-semibold">One-time payment</Text>
+              <View className={`${isDark ? 'bg-blue-800' : 'bg-blue-100'} px-4 py-2 rounded-full`}>
+                <Text className={`${isDark ? 'text-blue-300' : 'text-blue-600'} font-semibold`}>One-time payment</Text>
               </View>
             </View>
           </View>
@@ -216,7 +218,7 @@ export default function CourseDetails() {
       </ScrollView>
 
       {/* Enroll Button - Fixed at Bottom */}
-      <View className="p-6 bg-white border-t border-gray-100">
+      <View className={`p-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} border-t`}>
         <Pressable
           onPress={handleEnroll}
           disabled={enrolling || course.isEnrolled}
