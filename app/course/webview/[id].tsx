@@ -15,6 +15,7 @@ export default function CourseWebView() {
   const { isDark } = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [webViewKey, setWebViewKey] = useState(0);
 
   const course = courses.find((c) => c.id === id);
 
@@ -47,10 +48,10 @@ export default function CourseWebView() {
   };
 
   const handleRefresh = () => {
+    setLoading(true);
     setError(null);
-    if (webViewRef.current) {
-      webViewRef.current.reload();
-    }
+    // Force WebView remount by changing key (more reliable on iOS)
+    setWebViewKey(prev => prev + 1);
   };
 
   const handleWebViewError = (syntheticEvent: any) => {
@@ -74,25 +75,6 @@ export default function CourseWebView() {
     setError(null);
     // Send initial data after WebView loads
     setTimeout(() => sendDataToWebView(), 500);
-  };
-
-  const handleSendMessage = () => {
-    if (!webViewRef.current) return;
-
-    const message = {
-      message: `Message sent at ${new Date().toLocaleTimeString()}`,
-      type: "notification",
-    };
-
-    const jsCode = `
-      document.getElementById('messageContent').textContent = '${message.message}';
-      document.getElementById('nativeMessage').classList.add('show');
-      true;
-    `;
-
-    webViewRef.current.injectJavaScript(jsCode);
-
-    Alert.alert("Success", "Message sent to WebView!");
   };
 
   if (!course) {
@@ -475,13 +457,6 @@ export default function CourseWebView() {
           >
             <Ionicons name="refresh" size={24} color="white" />
           </Pressable>
-
-          <Pressable
-            onPress={handleSendMessage}
-            className="bg-white/20 p-2 rounded-full"
-          >
-            <Ionicons name="send" size={24} color="white" />
-          </Pressable>
         </View>
       </View>
 
@@ -510,12 +485,17 @@ export default function CourseWebView() {
           </Pressable>
         </View>
       ) : (
-        <>
-          {loading && <WebViewSkeleton isDark={isDark} />}
+        <View className="flex-1">
+          {loading && (
+            <View className="absolute inset-0 z-10">
+              <WebViewSkeleton isDark={isDark} />
+            </View>
+          )}
           <WebView
+            key={webViewKey}
             ref={webViewRef}
             source={{ html: htmlContent }}
-            style={{ flex: 1, opacity: loading ? 0 : 1 }}
+            style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#ffffff' }}
             onLoadStart={() => {
               setLoading(true);
               setError(null);
@@ -526,6 +506,7 @@ export default function CourseWebView() {
             javaScriptEnabled={true}
             domStorageEnabled={true}
             startInLoadingState={false}
+            originWhitelist={['*']}
             renderError={(_errorDomain, errorCode, errorDesc) => (
               <View className={`flex-1 items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-white'} px-6`}>
                 <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
@@ -547,7 +528,7 @@ export default function CourseWebView() {
               </View>
             )}
           />
-        </>
+        </View>
       )}
     </View>
   );
