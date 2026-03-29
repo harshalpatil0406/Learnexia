@@ -1,13 +1,34 @@
+import * as NavigationBar from "expo-navigation-bar";
 import { Stack } from "expo-router";
 import { useEffect } from "react";
-import { ThemeProvider } from "../contexts/ThemeContext";
-import { notificationService } from "../services/notificationService";
+import { Platform } from "react-native";
+import { OfflineBanner } from "../components/OfflineBanner";
+import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import "../global.css";
-import { OfflineBanner } from "@/components/OfflineBanner";
+import { notificationService } from "../services/notificationService";
 
-export default function RootLayout() {
+function RootLayoutContent() {
+  const { isDark } = useTheme();
 
-    useEffect(() => {
+  useEffect(() => {
+    // Set Android navigation bar color based on theme
+    if (Platform.OS === "android") {
+      const setNavigationBar = async () => {
+        try {
+          // Check if NavigationBar module is available
+          if (NavigationBar.setButtonStyleAsync) {
+            // Set button style (light buttons on dark bg, dark buttons on light bg)
+            await NavigationBar.setButtonStyleAsync(isDark ? "light" : "dark");
+          }
+        } catch (error) {
+          console.log("Navigation bar color not supported on this device");
+        }
+      };
+      setNavigationBar();
+    }
+  }, [isDark]);
+
+  useEffect(() => {
     // Initialize notifications
     const initNotifications = async () => {
       // Request permissions if not already requested
@@ -50,13 +71,21 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider>
+    <>
       <OfflineBanner />
       <Stack 
         screenOptions={{
           headerShown: false,
         }}
       />
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <RootLayoutContent />
     </ThemeProvider>
   );
 }
