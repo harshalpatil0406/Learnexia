@@ -7,12 +7,16 @@ import { Course, Instructor } from "../types/course";
 // Helper functions to get user-specific storage keys
 const getBookmarksKey = (userId: string) => `bookmarked_courses_${userId}`;
 const getEnrolledKey = (userId: string) => `enrolled_courses_${userId}`;
+const getEnrollmentTimestampsKey = (userId: string) => `enrollment_timestamps_${userId}`;
+const getBookmarkTimestampsKey = (userId: string) => `bookmark_timestamps_${userId}`;
 
 interface CourseState {
   courses: Course[];
   instructors: Instructor[];
   bookmarkedCourses: string[];
   enrolledCourses: string[];
+  enrollmentTimestamps: { [courseId: string]: number };
+  bookmarkTimestamps: { [courseId: string]: number };
   loading: boolean;
   refreshing: boolean;
   searchQuery: string;
@@ -31,6 +35,8 @@ export const useCourseStore = create<CourseState>((set, get) => ({
   instructors: [],
   bookmarkedCourses: [],
   enrolledCourses: [],
+  enrollmentTimestamps: {},
+  bookmarkTimestamps: {},
   loading: false,
   refreshing: false,
   searchQuery: "",
@@ -139,7 +145,7 @@ export const useCourseStore = create<CourseState>((set, get) => ({
 
   toggleBookmark: async (courseId: string) => {
     console.log("toggleBookmark called for:", courseId);
-    const { bookmarkedCourses, courses, currentUserId } = get();
+    const { bookmarkedCourses, courses, currentUserId, bookmarkTimestamps } = get();
     
     if (!currentUserId) {
       console.error("No user logged in");
@@ -151,10 +157,16 @@ export const useCourseStore = create<CourseState>((set, get) => ({
     console.log("Current courses length:", courses.length);
 
     let updatedBookmarks: string[];
+    let updatedTimestamps = { ...bookmarkTimestamps };
+    
     if (isBookmarked) {
       updatedBookmarks = bookmarkedCourses.filter((id) => id !== courseId);
+      // Remove timestamp when unbookmarking
+      delete updatedTimestamps[courseId];
     } else {
       updatedBookmarks = [...bookmarkedCourses, courseId];
+      // Add timestamp when bookmarking
+      updatedTimestamps[courseId] = Date.now();
       
       // Show notification when user bookmarks 5+ courses
       if (updatedBookmarks.length === 5) {
@@ -181,12 +193,16 @@ export const useCourseStore = create<CourseState>((set, get) => ({
     // Use set with new object references to trigger re-render
     set({ 
       bookmarkedCourses: updatedBookmarks, 
-      courses: updatedCourses 
+      courses: updatedCourses,
+      bookmarkTimestamps: updatedTimestamps
     });
 
     // Persist to AsyncStorage with user-specific key
     try {
-      await AsyncStorage.setItem(getBookmarksKey(currentUserId), JSON.stringify(updatedBookmarks));
+      await Promise.all([
+        AsyncStorage.setItem(getBookmarksKey(currentUserId), JSON.stringify(updatedBookmarks)),
+        AsyncStorage.setItem(getBookmarkTimestampsKey(currentUserId), JSON.stringify(updatedTimestamps))
+      ]);
       console.log("Bookmarks saved to storage for user:", currentUserId);
     } catch (error) {
       console.error("Failed to save bookmarks:", error);
@@ -194,7 +210,7 @@ export const useCourseStore = create<CourseState>((set, get) => ({
   },
 
   enrollCourse: async (courseId: string) => {
-    const { enrolledCourses, courses, currentUserId } = get();
+    const { enrolledCourses, courses, currentUserId, enrollmentTimestamps } = get();
 
     if (!currentUserId) {
       console.error("No user logged in");
@@ -206,17 +222,25 @@ export const useCourseStore = create<CourseState>((set, get) => ({
     }
 
     const updatedEnrolled = [...enrolledCourses, courseId];
+    const updatedTimestamps = { ...enrollmentTimestamps, [courseId]: Date.now() };
 
     // Update courses with enrollment status
     const updatedCourses = courses.map((course) =>
       course.id === courseId ? { ...course, isEnrolled: true } : course
     );
 
-    set({ enrolledCourses: updatedEnrolled, courses: updatedCourses });
+    set({ 
+      enrolledCourses: updatedEnrolled, 
+      courses: updatedCourses,
+      enrollmentTimestamps: updatedTimestamps
+    });
 
     // Persist to AsyncStorage with user-specific key
     try {
-      await AsyncStorage.setItem(getEnrolledKey(currentUserId), JSON.stringify(updatedEnrolled));
+      await Promise.all([
+        AsyncStorage.setItem(getEnrolledKey(currentUserId), JSON.stringify(updatedEnrolled)),
+        AsyncStorage.setItem(getEnrollmentTimestampsKey(currentUserId), JSON.stringify(updatedTimestamps))
+      ]);
       console.log("Enrollment saved to storage for user:", currentUserId);
     } catch (error) {
       console.error("Failed to save enrollment:", error);
@@ -248,20 +272,28 @@ export const useCourseStore = create<CourseState>((set, get) => ({
     try {
       console.log("Initializing storage for user:", userId);
       
-      const [bookmarksStr, enrolledStr] = await Promise.all([
+      const [bookmarksStr, enrolledStr, enrollTimestampsStr, bookmarkTimestampsStr] = await Promise.all([
         AsyncStorage.getItem(getBookmarksKey(userId)),
         AsyncStorage.getItem(getEnrolledKey(userId)),
+        AsyncStorage.getItem(getEnrollmentTimestampsKey(userId)),
+        AsyncStorage.getItem(getBookmarkTimestampsKey(userId)),
       ]);
 
       const bookmarkedCourses = bookmarksStr ? JSON.parse(bookmarksStr) : [];
       const enrolledCourses = enrolledStr ? JSON.parse(enrolledStr) : [];
+      const enrollmentTimestamps = enrollTimestampsStr ? JSON.parse(enrollTimestampsStr) : {};
+      const bookmarkTimestamps = bookmarkTimestampsStr ? JSON.parse(bookmarkTimestampsStr) : {};
 
       console.log("Loaded bookmarks:", bookmarkedCourses);
       console.log("Loaded enrollments:", enrolledCourses);
+      console.log("Loaded enrollment timestamps:", enrollmentTimestamps);
+      console.log("Loaded bookmark timestamps:", bookmarkTimestamps);
 
       set({ 
         bookmarkedCourses, 
         enrolledCourses,
+        enrollmentTimestamps,
+        bookmarkTimestamps,
         currentUserId: userId 
       });
       
@@ -285,6 +317,8 @@ export const useCourseStore = create<CourseState>((set, get) => ({
     set({
       bookmarkedCourses: [],
       enrolledCourses: [],
+      enrollmentTimestamps: {},
+      bookmarkTimestamps: {},
       currentUserId: null,
       courses: [],
       instructors: [],
