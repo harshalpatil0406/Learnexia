@@ -7,12 +7,18 @@ const NOTIFICATION_PERMISSION_KEY = "notification_permission_requested";
 
 // Configure notification behavior
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async (notification) => {
+    // Allow milestone notifications (bookmarks) to show even when app is open
+    const notificationType = notification.request.content.data?.type;
+    const isMilestone = notificationType === 'bookmark_milestone';
+    
+    return {
+      shouldShowBanner: isMilestone, // Show banner for milestones only
+      shouldShowList: isMilestone, // Add to list for milestones only
+      shouldPlaySound: isMilestone, // Play sound for milestones only
+      shouldSetBadge: false, // Don't update badge when app is open
+    };
+  },
 });
 
 export const notificationService = {
@@ -108,7 +114,7 @@ export const notificationService = {
       await this.cancelInactivityReminder();
 
       // Schedule notification for 24 hours from now
-      await Notifications.scheduleNotificationAsync({
+      const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
           title: "📚 Continue Your Learning Journey",
           body: "You haven't checked your courses today. Come back and keep learning!",
@@ -122,7 +128,7 @@ export const notificationService = {
         identifier: "inactivity_reminder",
       });
 
-      console.log("Inactivity reminder scheduled for 24 hours");
+      console.log("Inactivity reminder scheduled for 24 hours from now");
     } catch (error) {
       console.error("Error scheduling inactivity reminder:", error);
     }
@@ -197,14 +203,14 @@ export const notificationService = {
   // Add notification listener
   addNotificationReceivedListener(
     callback: (notification: Notifications.Notification) => void
-  ): Notifications.EventSubscription  {
+  ): Notifications.EventSubscription {
     return Notifications.addNotificationReceivedListener(callback);
   },
 
   // Add notification response listener (when user taps notification)
   addNotificationResponseListener(
     callback: (response: Notifications.NotificationResponse) => void
-  ): Notifications.EventSubscription  {
+  ): Notifications.EventSubscription {
     return Notifications.addNotificationResponseReceivedListener(callback);
   },
 };
