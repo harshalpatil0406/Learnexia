@@ -12,6 +12,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { getErrorMessage } from "../../services/api";
 import { useCourseStore } from "../../store/courseStore";
 import { Course } from "../../types/course";
+import { HomeSkeleton } from "../../components/HomeSkeleton";
 
 export default function Home() {
   const router = useRouter();
@@ -109,12 +110,7 @@ export default function Home() {
   ), [isDark]);
 
   if (loading && courses.length === 0) {
-    return (
-      <View className={`flex-1 items-center justify-center ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
-        <ActivityIndicator size="large" color="#3B82F6" />
-        <Text className={`${isDark ? 'text-gray-400' : 'text-gray-600'} mt-4`}>Loading courses...</Text>
-      </View>
-    );
+    return <HomeSkeleton isDark={isDark} />;
   }
 
   if (error) {
