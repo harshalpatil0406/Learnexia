@@ -1,11 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, Text, TextInput, View } from "react-native";
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useTheme } from "../../contexts/ThemeContext";
 import { forgotPassword } from "../../services/authService";
 
 export default function ForgotPassword() {
   const router = useRouter();
+  const { isDark } = useTheme();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -45,14 +48,13 @@ export default function ForgotPassword() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-gradient-to-b from-blue-50 to-white"
-    >
-      <ScrollView 
+    <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      <KeyboardAwareScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
-        className="flex-1"
+        enableOnAndroid={true}
+        enableAutomaticScroll={true}
+        extraScrollHeight={20}
       >
         <View className="flex-1 px-6 py-12">
           {/* Back Button */}
@@ -69,10 +71,10 @@ export default function ForgotPassword() {
             <View className="bg-blue-500 w-20 h-20 rounded-full items-center justify-center mb-4 shadow-lg">
               <Ionicons name="lock-closed" size={40} color="white" />
             </View>
-            <Text className="text-4xl font-bold text-gray-800 mb-2">
+            <Text className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-800'} mb-2`}>
               Forgot Password?
             </Text>
-            <Text className="text-gray-500 text-base text-center px-4">
+            <Text className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-base text-center px-4`}>
               Don't worry! Enter your email address and we'll send you instructions to reset your password.
             </Text>
           </View>
@@ -81,8 +83,8 @@ export default function ForgotPassword() {
           <View className="space-y-4">
             {/* Email Input */}
             <View>
-              <Text className="text-gray-700 font-medium mb-2 ml-1">Email Address</Text>
-              <View className="flex-row items-center bg-white border border-gray-200 rounded-2xl px-4 shadow-sm">
+              <Text className={`${isDark ? 'text-gray-300' : 'text-gray-700'} font-medium mb-2 ml-1`}>Email Address</Text>
+              <View className={`flex-row items-center ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-2xl px-4 shadow-sm`}>
                 <Ionicons name="mail-outline" size={20} color="#9CA3AF" />
                 <TextInput
                   placeholder="Enter your email"
@@ -90,7 +92,7 @@ export default function ForgotPassword() {
                   onChangeText={setEmail}
                   autoCapitalize="none"
                   keyboardType="email-address"
-                  className="flex-1 p-4 text-gray-800"
+                  className={`flex-1 p-4 ${isDark ? 'text-white' : 'text-gray-800'}`}
                   placeholderTextColor="#9CA3AF"
                 />
               </View>
@@ -113,21 +115,21 @@ export default function ForgotPassword() {
           </View>
 
           {/* Info Section */}
-          <View className="mt-8 bg-blue-50 p-4 rounded-2xl">
+          <View className={`mt-8 ${isDark ? 'bg-blue-900/30' : 'bg-blue-50'} p-4 rounded-2xl`}>
             <View className="flex-row items-start">
               <Ionicons name="information-circle" size={24} color="#3B82F6" />
               <View className="flex-1 ml-3">
-                <Text className="text-gray-700 font-semibold mb-1">
+                <Text className={`${isDark ? 'text-gray-200' : 'text-gray-700'} font-semibold mb-1`}>
                   Check your email
                 </Text>
-                <Text className="text-gray-600 text-sm">
+                <Text className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm`}>
                   If an account exists with this email, you'll receive password reset instructions. Please check your spam folder if you don't see it.
                 </Text>
               </View>
             </View>
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 }

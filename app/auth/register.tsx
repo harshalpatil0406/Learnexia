@@ -1,13 +1,27 @@
-
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { registerUser } from "../../services/authService";
+import { ActivityIndicator, Image, Pressable, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import Animated, {
+  FadeInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming
+} from "react-native-reanimated";
+import { useTheme } from "../../contexts/ThemeContext";
 import { getErrorMessage } from "../../services/api";
+import { registerUser } from "../../services/authService";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function Register() {
   const router = useRouter();
+  const { isDark } = useTheme();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -16,22 +30,87 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const [nameFocused, setNameFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
+
+  const buttonScale = useSharedValue(1);
+  const nameShake = useSharedValue(0);
+  const emailShake = useSharedValue(0);
+  const passwordShake = useSharedValue(0);
+  const confirmPasswordShake = useSharedValue(0);
 
   const handleRegister = async () => {
+    setErrorMessage(""); // Clear previous errors
+    
     if (!name || !email || !password || !confirmPassword) {
-      return Alert.alert("Error", "All fields are required");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (!name) {
+        nameShake.value = withSequence(
+          withTiming(-10, { duration: 50 }),
+          withTiming(10, { duration: 50 }),
+          withTiming(-10, { duration: 50 }),
+          withTiming(0, { duration: 50 })
+        );
+      }
+      if (!email) {
+        emailShake.value = withSequence(
+          withTiming(-10, { duration: 50 }),
+          withTiming(10, { duration: 50 }),
+          withTiming(-10, { duration: 50 }),
+          withTiming(0, { duration: 50 })
+        );
+      }
+      if (!password) {
+        passwordShake.value = withSequence(
+          withTiming(-10, { duration: 50 }),
+          withTiming(10, { duration: 50 }),
+          withTiming(-10, { duration: 50 }),
+          withTiming(0, { duration: 50 })
+        );
+      }
+      if (!confirmPassword) {
+        confirmPasswordShake.value = withSequence(
+          withTiming(-10, { duration: 50 }),
+          withTiming(10, { duration: 50 }),
+          withTiming(-10, { duration: 50 }),
+          withTiming(0, { duration: 50 })
+        );
+      }
+      setErrorMessage("All fields are required");
+      return;
     }
 
     if (password !== confirmPassword) {
-      return Alert.alert("Error", "Passwords do not match");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      passwordShake.value = withSequence(
+        withTiming(-10, { duration: 50 }),
+        withTiming(10, { duration: 50 }),
+        withTiming(-10, { duration: 50 }),
+        withTiming(0, { duration: 50 })
+      );
+      confirmPasswordShake.value = withSequence(
+        withTiming(-10, { duration: 50 }),
+        withTiming(10, { duration: 50 }),
+        withTiming(-10, { duration: 50 }),
+        withTiming(0, { duration: 50 })
+      );
+      setErrorMessage("Passwords do not match");
+      return;
     }
 
     if (password.length < 6) {
-      return Alert.alert("Error", "Password must be at least 6 characters");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setErrorMessage("Password must be at least 6 characters");
+      return;
     }
 
     try {
       setLoading(true);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
       await registerUser({
         email: email.trim(),
@@ -43,156 +122,308 @@ export default function Register() {
       });
 
       setLoading(false);
-
-      Alert.alert("Success", "Account created successfully! Please login.");
-
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace("/auth/login");
     } catch (error: any) {
       setLoading(false);
-      Alert.alert("Registration Failed", getErrorMessage(error));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setErrorMessage(getErrorMessage(error));
     }
   };
 
+  const buttonAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+  }));
+
+  const nameAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: nameShake.value }],
+  }));
+
+  const emailAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: emailShake.value }],
+  }));
+
+  const passwordAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: passwordShake.value }],
+  }));
+
+  const confirmPasswordAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: confirmPasswordShake.value }],
+  }));
+
+  const handleButtonPress = () => {
+    buttonScale.value = withSequence(
+      withSpring(0.95),
+      withSpring(1)
+    );
+    handleRegister();
+  };
+
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-gradient-to-b from-blue-50 to-white"
-    >
-      <ScrollView 
+    <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gradient-to-b from-purple-50 to-white'}`}>
+      <KeyboardAwareScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
-        className="flex-1"
+        enableOnAndroid={true}
+        enableAutomaticScroll={true}
+        extraScrollHeight={20}
+        showsVerticalScrollIndicator={false}
       >
-        <View className="flex-1 justify-center px-6 py-12">
+        <View className="flex-1 justify-center px-6 py-8">
           {/* Header Section */}
-          <View className="items-center mb-8">
-            <View className="bg-blue-500 w-20 h-20 rounded-full items-center justify-center mb-4 shadow-lg">
-              <Ionicons name="person-add" size={40} color="white" />
+          <Animated.View 
+            entering={FadeInDown.duration(600)}
+            className="items-center mb-6"
+          >
+            {/* App Logo */}
+            <View className="relative mb-4">
+              <Image 
+                source={require('@/assets/images/logo.png')}
+                style={{ width: 80, height: 80, borderRadius: 20 }}
+                resizeMode="contain"
+              />
             </View>
-            <Text className="text-4xl font-bold text-gray-800 mb-2">
-              Create Account
+
+            <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'} mb-2`}>
+              Join Learnexia
             </Text>
-            <Text className="text-gray-500 text-base text-center">
-              Start your learning journey with Learnexia
+            <Text className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-sm text-center px-8`}>
+              Start your learning journey today
             </Text>
-          </View>
+          </Animated.View>
 
           {/* Form Section */}
-          <View className="space-y-4">
+          <Animated.View 
+            entering={FadeInDown.delay(200).duration(600)}
+            className="space-y-3"
+          >
+            {/* Error Message */}
+            {errorMessage ? (
+              <Animated.View 
+                entering={FadeInDown.duration(300)}
+                className="flex-row items-center justify-center mb-2"
+              >
+                <Ionicons name="alert-circle" size={16} color="#EF4444" />
+                <Text className="text-red-500 ml-2 text-sm font-medium">
+                  {errorMessage}
+                </Text>
+              </Animated.View>
+            ) : null}
+
             {/* Name Input */}
-            <View>
-              <Text className="text-gray-700 font-medium mb-2 ml-1">Full Name</Text>
-              <View className="flex-row items-center bg-white border border-gray-200 rounded-2xl px-4 shadow-sm">
-                <Ionicons name="person-outline" size={20} color="#9CA3AF" />
+            <Animated.View style={nameAnimatedStyle}>
+              <Text className={`${isDark ? 'text-gray-300' : 'text-gray-700'} font-semibold mb-2 ml-1`}>
+                Full Name
+              </Text>
+              <View className={`flex-row items-center ${isDark ? 'bg-gray-800' : 'bg-white'} ${
+                nameFocused ? 'border-2 border-purple-500' : 'border border-gray-200'
+              } rounded-2xl px-4 shadow-sm`}>
+                <Ionicons 
+                  name="person" 
+                  size={20} 
+                  color={nameFocused ? '#8B5CF6' : '#9CA3AF'} 
+                />
                 <TextInput
                   placeholder="Enter your full name"
                   value={name}
                   onChangeText={setName}
-                  className="flex-1 p-4 text-gray-800"
+                  onFocus={() => {
+                    setNameFocused(true);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                  onBlur={() => setNameFocused(false)}
+                  className={`flex-1 p-4 ${isDark ? 'text-white' : 'text-gray-800'}`}
                   placeholderTextColor="#9CA3AF"
                 />
+                {name.length > 0 && (
+                  <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+                )}
               </View>
-            </View>
+            </Animated.View>
 
             {/* Email Input */}
-            <View>
-              <Text className="text-gray-700 font-medium mb-2 mt-2 ml-1">Email</Text>
-              <View className="flex-row items-center bg-white border border-gray-200 rounded-2xl px-4 shadow-sm">
-                <Ionicons name="mail-outline" size={20} color="#9CA3AF" />
+            <Animated.View style={emailAnimatedStyle}>
+              <Text className={`${isDark ? 'text-gray-300' : 'text-gray-700'} font-semibold mb-2 ml-1 mt-2`}>
+                Email Address
+              </Text>
+              <View className={`flex-row items-center ${isDark ? 'bg-gray-800' : 'bg-white'} ${
+                emailFocused ? 'border-2 border-purple-500' : 'border border-gray-200'
+              } rounded-2xl px-4 shadow-sm`}>
+                <Ionicons 
+                  name="mail" 
+                  size={20} 
+                  color={emailFocused ? '#8B5CF6' : '#9CA3AF'} 
+                />
                 <TextInput
                   placeholder="Enter your email"
                   value={email}
                   onChangeText={setEmail}
+                  onFocus={() => {
+                    setEmailFocused(true);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                  onBlur={() => setEmailFocused(false)}
                   autoCapitalize="none"
                   keyboardType="email-address"
-                  className="flex-1 p-4 text-gray-800"
+                  className={`flex-1 p-4 ${isDark ? 'text-white' : 'text-gray-800'}`}
                   placeholderTextColor="#9CA3AF"
                 />
+                {email.length > 0 && (
+                  <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+                )}
               </View>
-            </View>
+            </Animated.View>
 
             {/* Password Input */}
-            <View>
-              <Text className="text-gray-700 font-medium mb-2 mt-2 ml-1">Password</Text>
-              <View className="flex-row items-center bg-white border border-gray-200 rounded-2xl px-4 shadow-sm">
-                <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" />
+            <Animated.View style={passwordAnimatedStyle}>
+              <Text className={`${isDark ? 'text-gray-300' : 'text-gray-700'} font-semibold mb-2 ml-1 mt-2`}>
+                Password
+              </Text>
+              <View className={`flex-row items-center ${isDark ? 'bg-gray-800' : 'bg-white'} ${
+                passwordFocused ? 'border-2 border-purple-500' : 'border border-gray-200'
+              } rounded-2xl px-4 shadow-sm`}>
+                <Ionicons 
+                  name="lock-closed" 
+                  size={20} 
+                  color={passwordFocused ? '#8B5CF6' : '#9CA3AF'} 
+                />
                 <TextInput
-                  placeholder="Create a password"
+                  placeholder="Create a password (min 6 chars)"
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
-                  className="flex-1 p-4 text-gray-800"
+                  onFocus={() => {
+                    setPasswordFocused(true);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                  onBlur={() => setPasswordFocused(false)}
+                  className={`flex-1 p-4 ${isDark ? 'text-white' : 'text-gray-800'}`}
                   placeholderTextColor="#9CA3AF"
                 />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setShowPassword(!showPassword);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                >
                   <Ionicons 
-                    name={showPassword ? "eye-outline" : "eye-off-outline"} 
+                    name={showPassword ? "eye" : "eye-off"} 
                     size={20} 
                     color="#9CA3AF" 
                   />
                 </TouchableOpacity>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Confirm Password Input */}
-            <View>
-              <Text className="text-gray-700 font-medium mb-2 mt-2 ml-1">Confirm Password</Text>
-              <View className="flex-row items-center bg-white border border-gray-200 rounded-2xl px-4 shadow-sm">
-                <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" />
+            <Animated.View style={confirmPasswordAnimatedStyle}>
+              <Text className={`${isDark ? 'text-gray-300' : 'text-gray-700'} font-semibold mb-2 ml-1 mt-2`}>
+                Confirm Password
+              </Text>
+              <View className={`flex-row items-center ${isDark ? 'bg-gray-800' : 'bg-white'} ${
+                confirmPasswordFocused ? 'border-2 border-purple-500' : 'border border-gray-200'
+              } rounded-2xl px-4 shadow-sm`}>
+                <Ionicons 
+                  name="lock-closed" 
+                  size={20} 
+                  color={confirmPasswordFocused ? '#8B5CF6' : '#9CA3AF'} 
+                />
                 <TextInput
                   placeholder="Confirm your password"
                   secureTextEntry={!showConfirmPassword}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
-                  className="flex-1 p-4 text-gray-800"
+                  onFocus={() => {
+                    setConfirmPasswordFocused(true);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                  onBlur={() => setConfirmPasswordFocused(false)}
+                  className={`flex-1 p-4 ${isDark ? 'text-white' : 'text-gray-800'}`}
                   placeholderTextColor="#9CA3AF"
                 />
-                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setShowConfirmPassword(!showConfirmPassword);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                >
                   <Ionicons 
-                    name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} 
+                    name={showConfirmPassword ? "eye" : "eye-off"} 
                     size={20} 
                     color="#9CA3AF" 
                   />
                 </TouchableOpacity>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Register Button */}
-            <Pressable
-              onPress={handleRegister}
+            <AnimatedPressable
+              onPress={handleButtonPress}
               disabled={loading}
-              className={`bg-blue-500 p-4 rounded-2xl mt-6 shadow-lg ${loading ? 'opacity-70' : ''}`}
+              style={buttonAnimatedStyle}
+              className="mt-6 rounded-2xl overflow-hidden shadow-lg w-full"
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text className="text-white text-center font-bold text-lg">
-                  Create Account
-                </Text>
-              )}
-            </Pressable>
-          </View>
+              <LinearGradient
+                colors={['#8B5CF6', '#EC4899']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ paddingVertical: 16, paddingHorizontal: 24 }}
+                className={loading ? 'opacity-70' : ''}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <View className="flex-row items-center justify-center">
+                    <Text className="text-white text-center font-bold text-lg mr-2">
+                      Create Account
+                    </Text>
+                    <Ionicons name="arrow-forward" size={20} color="white" />
+                  </View>
+                )}
+              </LinearGradient>
+            </AnimatedPressable>
+          </Animated.View>
 
           {/* Footer Section */}
-          <View className="mt-8">
+          <Animated.View 
+            entering={FadeInDown.delay(400).duration(600)}
+            className="mt-8"
+          >
             <View className="flex-row items-center justify-center">
-              <View className="flex-1 h-px bg-gray-300" />
-              <Text className="mx-4 text-gray-500">or</Text>
-              <View className="flex-1 h-px bg-gray-300" />
+              <View className={`flex-1 h-px ${isDark ? 'bg-gray-700' : 'bg-gray-300'}`} />
+              <Text className={`mx-4 ${isDark ? 'text-gray-500' : 'text-gray-500'} font-medium`}>
+                Already a member?
+              </Text>
+              <View className={`flex-1 h-px ${isDark ? 'bg-gray-700' : 'bg-gray-300'}`} />
             </View>
 
             <Pressable 
-              onPress={() => router.replace("/auth/login")}
-              className="mt-6"
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.replace("/auth/login");
+              }}
+              className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-2 p-4 rounded-2xl mt-6`}
             >
-              <Text className="text-center text-gray-600">
-                Already have an account?{" "}
-                <Text className="text-blue-500 font-semibold">Sign In</Text>
-              </Text>
+              <View className="flex-row items-center justify-center">
+                <Ionicons name="log-in" size={20} color="#8B5CF6" />
+                <Text className="text-purple-500 font-bold text-lg ml-2">
+                  Sign In
+                </Text>
+              </View>
             </Pressable>
-          </View>
+          </Animated.View>
+
+          {/* Terms Footer */}
+          <Animated.View 
+            entering={FadeInDown.delay(600).duration(600)}
+            className="mt-6"
+          >
+            <Text className={`text-center ${isDark ? 'text-gray-500' : 'text-gray-400'} text-xs`}>
+              By creating an account, you agree to our Terms of Service and Privacy Policy
+            </Text>
+          </Animated.View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 }
