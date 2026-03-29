@@ -76,6 +76,7 @@ export default function Profile() {
       
       try {
         await uploadAvatar(imageUri);
+        setLocalImage(null); // Clear local image after successful upload
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Alert.alert("Success", "Profile picture updated successfully!");
       } catch (error: any) {

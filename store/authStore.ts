@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { loginUser, refreshToken as refreshTokenAPI, updateAvatar } from "../services/authService";
 import { deleteRefreshToken, deleteToken, deleteUser, getRefreshToken, getToken, getUser, saveRefreshToken, saveToken, saveUser } from "../utils/secureStore";
@@ -134,8 +133,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       const res = await updateAvatar(imageUri);
       
-      // Update user with new avatar from response
-      const updatedUser = res.data?.user || { ...get().user, avatar: res.data?.avatar };
+      // Normalize avatar URL - handle both formats
+      const avatarUrl = res.data?.avatar?.url || res.data?.avatar || imageUri;
+      
+      const updatedUser = {
+        ...get().user,
+        avatar: {
+          url: avatarUrl
+        }
+      };
       
       await saveUser(updatedUser);
       

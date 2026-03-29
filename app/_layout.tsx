@@ -11,7 +11,7 @@ function RootLayoutContent() {
   const { isDark } = useTheme();
 
   useEffect(() => {
-    // Set Android navigation bar color based on theme
+    // Set Android navigation bar button style based on theme
     if (Platform.OS === "android") {
       const setNavigationBar = async () => {
         try {
@@ -21,7 +21,8 @@ function RootLayoutContent() {
             await NavigationBar.setButtonStyleAsync(isDark ? "light" : "dark");
           }
         } catch (error) {
-          console.log("Navigation bar color not supported on this device");
+          // Silently fail if navigation bar API is not available
+          console.log("Navigation bar styling not available on this device");
         }
       };
       setNavigationBar();
@@ -52,13 +53,14 @@ function RootLayoutContent() {
     // Set up notification listeners
     const notificationListener = notificationService.addNotificationReceivedListener(
       (notification) => {
-        console.log("Notification received:", notification);
+        // This fires when a notification is actually received while app is open
+        console.log("Notification received while app is open:", notification.request.content.title);
       }
     );
 
     const responseListener = notificationService.addNotificationResponseListener(
       (response) => {
-        console.log("Notification tapped:", response);
+        console.log("Notification tapped:", response.notification.request.content.title);
         // Handle notification tap - could navigate to specific screen
       }
     );

@@ -154,6 +154,7 @@ export default function EditProfile() {
     try {
       if (localImage) {
         await uploadAvatar(localImage);
+        setLocalImage(null); // Clear local image after successful upload
       }
 
       if (username !== user?.username || email !== user?.email) {
