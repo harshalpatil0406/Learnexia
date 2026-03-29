@@ -6,7 +6,6 @@ import { FlatList, Image, Modal, Pressable, Text, View } from "react-native";
 import Animated, {
     FadeInDown,
     FadeInLeft,
-    Layout,
     useAnimatedProps,
     useAnimatedStyle,
     useSharedValue,
@@ -15,6 +14,7 @@ import Animated, {
     withSpring,
     withTiming,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle } from "react-native-svg";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useCourseStore } from "../../store/courseStore";
@@ -171,7 +171,6 @@ function EnrolledCourseItem({
     return (
       <Animated.View
         entering={FadeInDown.delay(index * 100).springify()}
-        layout={Layout.springify()}
         className="w-[48%] mb-4"
       >
         <Animated.View style={animatedStyle}>
@@ -225,7 +224,6 @@ function EnrolledCourseItem({
   return (
     <Animated.View
       entering={FadeInLeft.delay(index * 100).springify()}
-      layout={Layout.springify()}
     >
       <Animated.View style={animatedStyle}>
         <Pressable onPress={onPress}>
@@ -314,6 +312,7 @@ export default function EnrolledCourses() {
   const router = useRouter();
   const { courses, enrolledCourses, enrollmentTimestamps } = useCourseStore();
   const { isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const [isGridView, setIsGridView] = useState(() => {
     // Load saved view preference
     try {
@@ -434,8 +433,12 @@ export default function EnrolledCourses() {
           key={isGridView ? 'grid' : 'list'}
           numColumns={isGridView ? 2 : 1}
           columnWrapperStyle={isGridView ? { justifyContent: 'space-between' } : undefined}
-          contentContainerStyle={{ padding: 16 }}
+          contentContainerStyle={{ 
+            padding: 16,
+            paddingBottom: Math.max(insets.bottom + 16, 32)
+          }}
           showsVerticalScrollIndicator={false}
+          scrollEnabled={true}
         />
       ) : (
         <Animated.View 

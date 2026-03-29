@@ -3,24 +3,20 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { FlatList, Image, Modal, Pressable, Text, View } from "react-native";
-import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
     FadeInDown,
     FadeInLeft,
-    FadeOutRight,
-    Layout,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
+    FadeOutRight
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useCourseStore } from "../../store/courseStore";
 import { Course } from "../../types/course";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-// Separate component for bookmarked course item with swipe
+// Separate component for bookmarked course item
 function BookmarkedCourseItem({ 
   item, 
   onPress, 
@@ -37,41 +33,11 @@ function BookmarkedCourseItem({
   isGridView: boolean;
 }) {
   const [imageError, setImageError] = useState(false);
-  const translateX = useSharedValue(0);
-  const itemHeight = useSharedValue(1);
-  const opacity = useSharedValue(1);
-
-  const panGesture = Gesture.Pan()
-    .onUpdate((e) => {
-      if (e.translationX < 0) {
-        translateX.value = e.translationX;
-      }
-    })
-    .onEnd((e) => {
-      if (e.translationX < -100) {
-        translateX.value = withTiming(-400, { duration: 300 });
-        itemHeight.value = withTiming(0, { duration: 300 });
-        opacity.value = withTiming(0, { duration: 300 });
-        setTimeout(() => {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          onRemoveBookmark();
-        }, 300);
-      } else {
-        translateX.value = withSpring(0);
-      }
-    });
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-    height: itemHeight.value === 1 ? undefined : itemHeight.value,
-    opacity: opacity.value,
-  }));
 
   if (isGridView) {
     return (
       <Animated.View
         entering={FadeInDown.delay(index * 100).springify()}
-        layout={Layout.springify()}
         className="w-[48%] mb-4"
       >
         <Pressable onPress={onPress}>
@@ -128,77 +94,74 @@ function BookmarkedCourseItem({
     <Animated.View
       entering={FadeInLeft.delay(index * 100).springify()}
       exiting={FadeOutRight}
-      layout={Layout.springify()}
     >
-      <GestureDetector gesture={panGesture}>
-        <Animated.View style={animatedStyle}>
-          <Pressable onPress={onPress}>
-            <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-2xl mb-4 shadow-sm overflow-hidden h-36`}>
-              <View className="flex-row h-full">
-                {/* Course Thumbnail - Full Height */}
-                <View className={`w-32 h-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
-                  {!imageError && item.thumbnail ? (
-                    <Image
-                      source={{ uri: item.thumbnail }}
-                      className="w-full h-full"
-                      resizeMode="cover"
-                      onError={() => setImageError(true)}
-                    />
-                  ) : (
-                    <View className="w-full h-full bg-blue-500 items-center justify-center">
-                      <Ionicons name="school-outline" size={40} color="white" />
-                    </View>
-                  )}
+      <Pressable onPress={onPress}>
+        <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-2xl mb-4 shadow-sm overflow-hidden h-36`}>
+          <View className="flex-row h-full">
+            {/* Course Thumbnail - Full Height */}
+            <View className={`w-32 h-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
+              {!imageError && item.thumbnail ? (
+                <Image
+                  source={{ uri: item.thumbnail }}
+                  className="w-full h-full"
+                  resizeMode="cover"
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <View className="w-full h-full bg-blue-500 items-center justify-center">
+                  <Ionicons name="school-outline" size={40} color="white" />
                 </View>
+              )}
+            </View>
 
-                {/* Course Info */}
-                <View className="flex-1 py-3 px-4">
-                  <View className={`${isDark ? 'bg-blue-900' : 'bg-blue-50'} self-start px-2 py-1 rounded-full mb-2`}>
-                    <Text className={`${isDark ? 'text-blue-300' : 'text-blue-600'} text-xs font-semibold`}>
-                      {item.category}
-                    </Text>
-                  </View>
-
-                  <Text className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-800'} mb-3`} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-
-                  {item.instructor && (
-                    <View className="flex-row items-center mb-3">
-                      <Image
-                        source={{ uri: item.instructor.avatar }}
-                        className="w-5 h-5 rounded-full mr-2"
-                      />
-                      <Text className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs flex-1`} numberOfLines={1}>
-                        {item.instructor.name}
-                      </Text>
-                    </View>
-                  )}
-
-                  <View className={`${isDark ? 'bg-green-900' : 'bg-green-50'} self-start px-2 py-1 rounded-full mb-4`}>
-                    <Text className={`${isDark ? 'text-green-300' : 'text-green-600'} font-bold text-xs`}>
-                      ${item.price}
-                    </Text>
-                  </View>
-                </View>
+            {/* Course Info */}
+            <View className="flex-1 py-3 px-4">
+              <View className={`${isDark ? 'bg-blue-900' : 'bg-blue-50'} self-start px-2 py-1 rounded-full mb-2`}>
+                <Text className={`${isDark ? 'text-blue-300' : 'text-blue-600'} text-xs font-semibold`}>
+                  {item.category}
+                </Text>
               </View>
 
-              {/* Swipe Hint */}
-              <View
-                style={{
-                  position: 'absolute',
-                  right: 16,
-                  top: 0,
-                  bottom: 0,
-                  justifyContent: 'center',
-                }}
-              >
-                <Ionicons name="chevron-forward" size={24} color={isDark ? '#4B5563' : '#D1D5DB'} />
+              <Text className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-800'} mb-3`} numberOfLines={2}>
+                {item.title}
+              </Text>
+
+              {item.instructor && (
+                <View className="flex-row items-center mb-3">
+                  <Image
+                    source={{ uri: item.instructor.avatar }}
+                    className="w-5 h-5 rounded-full mr-2"
+                  />
+                  <Text className={`${isDark ? 'text-gray-400' : 'text-gray-600'} text-xs flex-1`} numberOfLines={1}>
+                    {item.instructor.name}
+                  </Text>
+                </View>
+              )}
+
+              <View className={`${isDark ? 'bg-green-900' : 'bg-green-50'} self-start px-2 py-1 rounded-full mb-4`}>
+                <Text className={`${isDark ? 'text-green-300' : 'text-green-600'} font-bold text-xs`}>
+                  ${item.price}
+                </Text>
               </View>
             </View>
+          </View>
+
+          {/* Remove Button */}
+          <Pressable
+            onPress={onRemoveBookmark}
+            style={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              backgroundColor: 'rgba(239, 68, 68, 0.9)',
+              padding: 6,
+              borderRadius: 16,
+            }}
+          >
+            <Ionicons name="bookmark" size={16} color="white" />
           </Pressable>
-        </Animated.View>
-      </GestureDetector>
+        </View>
+      </Pressable>
     </Animated.View>
   );
 }
@@ -207,6 +170,7 @@ export default function Bookmarks() {
   const router = useRouter();
   const { courses, bookmarkedCourses, toggleBookmark, bookmarkTimestamps } = useCourseStore();
   const { isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const [renderCount, setRenderCount] = useState(0);
   const [isGridView, setIsGridView] = useState(() => {
     // Load saved view preference from global storage
@@ -292,7 +256,7 @@ export default function Bookmarks() {
                 onPress={toggleViewMode}
                 className={`${isDark ? 'bg-white/20' : 'bg-gray-100'} p-2 rounded-full mr-2`}
               >
-               <Ionicons name={isGridView ? "list" : "grid"} size={24} color={isDark ? 'white' : '#1F2937'} />
+                <Ionicons name={isGridView ? "list" : "grid"} size={24} color={isDark ? 'white' : '#1F2937'} />
               </Pressable>
               
               {/* Sort Button */}
@@ -323,8 +287,12 @@ export default function Bookmarks() {
           key={isGridView ? 'grid' : 'list'}
           numColumns={isGridView ? 2 : 1}
           columnWrapperStyle={isGridView ? { justifyContent: 'space-between' } : undefined}
-          contentContainerStyle={{ padding: 16 }}
+          contentContainerStyle={{ 
+            padding: 16,
+            paddingBottom: Math.max(insets.bottom + 16, 32)
+          }}
           showsVerticalScrollIndicator={false}
+          scrollEnabled={true}
         />
       ) : (
         <Animated.View 
@@ -424,7 +392,7 @@ export default function Bookmarks() {
 
             <Pressable
               onPress={() => handleSort('price')}
-              className={`flex-row items-center justify-between p-4 rounded-2xl ${
+              className={`flex-row items-center justify-between p-4 mb-10 rounded-2xl ${
                 sortBy === 'price' ? 'bg-blue-500' : (isDark ? 'bg-gray-700' : 'bg-gray-100')
               }`}
             >
