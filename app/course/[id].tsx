@@ -27,6 +27,7 @@ import Animated, {
 import { SuccessModal } from "../../components/SuccessModal";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useCourseStore } from "../../store/courseStore";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { height } = Dimensions.get("window");
 const HEADER_HEIGHT = 300;
@@ -38,6 +39,7 @@ export default function CourseDetails() {
   const router = useRouter();
   const { courses, toggleBookmark, enrollCourse } = useCourseStore();
   const { isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const [enrolling, setEnrolling] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -481,7 +483,10 @@ export default function CourseDetails() {
       />
 
       {/* Enroll Button - Fixed at Bottom */}
-      <View className={`p-6 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} border-t`}>
+      <View 
+        className={`px-6 pt-4 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} border-t`}
+        style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+      >
         <AnimatedPressable
           onPress={handleEnroll}
           disabled={enrolling || course.isEnrolled}

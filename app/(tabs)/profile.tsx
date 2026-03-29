@@ -298,7 +298,7 @@ export default function Profile() {
 
             <Pressable
               onPress={() => setShowLogoutModal(false)}
-              className={`${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded-2xl p-4`}
+              className={`${isDark ? 'bg-gray-700' : 'bg-gray-200'} rounded-2xl p-4 mb-10`}
             >
               <Text className={`${isDark ? 'text-gray-300' : 'text-gray-700'} font-bold text-center text-lg`}>
                 Cancel
