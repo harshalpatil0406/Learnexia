@@ -3,10 +3,10 @@ import * as Haptics from "expo-haptics";
 import React, { useEffect } from "react";
 import { Pressable, TextInput, View } from "react-native";
 import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withRepeat,
-    withTiming,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
 } from "react-native-reanimated";
 
 interface AnimatedSearchBarProps {
@@ -42,13 +42,13 @@ export function AnimatedSearchBar({ value, onChangeText, isLoading, isDark }: An
 
   return (
     <View className={`flex-row items-center ${
-      isDark ? "bg-gray-700" : "bg-white"
+      isDark ? "bg-gray-700" : "bg-gray-100"
     } rounded-xl px-3 py-2.5`}>
       <Animated.View style={iconRotationStyle}>
         <Ionicons
           name={isLoading ? "hourglass-outline" : "search"}
           size={18}
-          color="#9CA3AF"
+          color={isDark ? "#9CA3AF" : "#6B7280"}
         />
       </Animated.View>
       <TextInput
@@ -57,11 +57,11 @@ export function AnimatedSearchBar({ value, onChangeText, isLoading, isDark }: An
         onChangeText={onChangeText}
         onFocus={handleFocus}
         className={`flex-1 ml-2 text-sm ${isDark ? "text-white" : "text-gray-800"}`}
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor={isDark ? "#9CA3AF" : "#9CA3AF"}
       />
       {value.length > 0 && (
         <Pressable onPress={handleClear}>
-          <Ionicons name="close-circle" size={18} color="#9CA3AF" />
+          <Ionicons name="close-circle" size={18} color={isDark ? "#9CA3AF" : "#6B7280"} />
         </Pressable>
       )}
     </View>

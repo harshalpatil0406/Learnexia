@@ -114,7 +114,7 @@ export default function Profile() {
   return (
     <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Fixed Header */}
-      <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} pt-16 pb-6 px-6`}>
+      <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} pt-16 pb-6 px-6 shadow-md`}>
         <View className="flex-row justify-between items-center">
           <Text className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Profile</Text>
           <TouchableOpacity 

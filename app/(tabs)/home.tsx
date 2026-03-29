@@ -1,18 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, Text, View } from "react-native";
+import { Alert, FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 import { AnimatedCourseCard } from "../../components/AnimatedCourseCard";
 import { AnimatedEmptyState } from "../../components/AnimatedEmptyState";
 import { AnimatedSearchBar } from "../../components/AnimatedSearchBar";
 import { CategoryPills } from "../../components/CategoryPills";
 import { FloatingActionButton } from "../../components/FloatingActionButton";
 import { HeroCarousel } from "../../components/HeroCarousel";
+import { HomeSkeleton } from "../../components/HomeSkeleton";
 import { useTheme } from "../../contexts/ThemeContext";
 import { getErrorMessage } from "../../services/api";
 import { useCourseStore } from "../../store/courseStore";
 import { Course } from "../../types/course";
-import { HomeSkeleton } from "../../components/HomeSkeleton";
 
 export default function Home() {
   const router = useRouter();
@@ -133,18 +133,18 @@ export default function Home() {
   return (
     <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Header */}
-      <View className={`${isDark ? 'bg-gray-800' : 'bg-blue-500'} pt-14 pb-4 px-6`}>
+      <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} pt-14 pb-4 px-6 shadow-sm`}>
         <View className="flex-row items-center justify-between mb-3">
           <View>
-            <Text className="text-white text-2xl font-bold">
+            <Text className={`${isDark ? 'text-white' : 'text-gray-800'} text-2xl font-bold`}>
               Learnexia
             </Text>
-            <Text className="text-white/70 text-xs mt-0.5">
+            <Text className={`${isDark ? 'text-white/70' : 'text-gray-500'} text-xs mt-0.5`}>
               Explore & Learn
             </Text>
           </View>
-          <View className="bg-white/20 px-3 py-1.5 rounded-full">
-            <Text className="text-white font-semibold text-xs">
+          <View className={`${isDark ? 'bg-white/20' : 'bg-blue-50'} px-3 py-1.5 rounded-full`}>
+            <Text className={`${isDark ? 'text-white' : 'text-blue-600'} font-semibold text-xs`}>
               {courses.length} Courses
             </Text>
           </View>
@@ -180,7 +180,7 @@ export default function Home() {
             />
           </>
         }
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -197,9 +197,6 @@ export default function Home() {
         initialNumToRender={10}
         windowSize={10}
       />
-
-      {/* Floating Action Button */}
-      <FloatingActionButton onPress={handleFilterPress} isDark={isDark} />
     </View>
   );
 }

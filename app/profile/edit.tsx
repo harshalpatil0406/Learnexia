@@ -194,7 +194,7 @@ export default function EditProfile() {
   return (
     <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Header */}
-      <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} pt-16 pb-6 px-6`}>
+      <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} pt-16 pb-6 px-6 shadow-md`}>
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center flex-1">
             <Pressable

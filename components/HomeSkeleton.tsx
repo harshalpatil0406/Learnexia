@@ -9,21 +9,21 @@ export function HomeSkeleton({ isDark }: HomeSkeletonProps) {
   return (
     <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Header Skeleton */}
-      <View className={`${isDark ? 'bg-gray-800' : 'bg-blue-500'} pt-14 pb-4 px-6`}>
+      <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} pt-14 pb-4 px-6 shadow-sm`}>
         <View className="flex-row items-center justify-between mb-3">
           <View>
-            <Text className="text-white text-2xl font-bold">Learnexia</Text>
-            <Text className="text-white/70 text-xs mt-0.5">Explore & Learn</Text>
+            <Text className={`${isDark ? 'text-white' : 'text-gray-800'} text-2xl font-bold`}>Learnexia</Text>
+            <Text className={`${isDark ? 'text-white/70' : 'text-gray-500'} text-xs mt-0.5`}>Explore & Learn</Text>
           </View>
-          <View className="bg-white/20 px-3 py-1.5 rounded-full">
-            <Text className="text-white font-semibold text-xs">Loading...</Text>
+          <View className={`${isDark ? 'bg-white/20' : 'bg-blue-50'} px-3 py-1.5 rounded-full`}>
+            <Text className={`${isDark ? 'text-white' : 'text-blue-600'} font-semibold text-xs`}>Loading...</Text>
           </View>
         </View>
         
         {/* Search Bar Skeleton */}
-        <View className={`${isDark ? 'bg-gray-700' : 'bg-white/20'} rounded-2xl px-4 py-3 flex-row items-center`}>
-          <Ionicons name="search" size={20} color="rgba(255,255,255,0.5)" />
-          <View className="flex-1 ml-3 h-4 bg-white/10 rounded" />
+        <View className={`${isDark ? 'bg-gray-700' : 'bg-gray-100'} rounded-2xl px-4 py-3 flex-row items-center`}>
+          <Ionicons name="search" size={20} color={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'} />
+          <View className={`flex-1 ml-3 h-4 ${isDark ? 'bg-gray-600' : 'bg-gray-200'} rounded`} />
         </View>
       </View>
 

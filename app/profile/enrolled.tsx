@@ -384,15 +384,15 @@ export default function EnrolledCourses() {
   return (
     <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Header */}
-      <View className={`${isDark ? 'bg-gray-800' : 'bg-blue-500'} pt-16 pb-6 px-6`}>
+      <View className={`${isDark ? 'bg-gray-800' : 'bg-white'} pt-16 pb-6 px-6 shadow-md`}>
         <View className="flex-row items-center mb-2">
           <Pressable
             onPress={() => router.back()}
-            className="bg-white/20 p-2 rounded-full mr-4"
+            className={`${isDark ? 'bg-white/20' : 'bg-gray-100'} p-2 rounded-full mr-4`}
           >
-            <Ionicons name="arrow-back" size={24} color="white" />
+            <Ionicons name="arrow-back" size={24} color={isDark ? 'white' : '#1F2937'} />
           </Pressable>
-          <Text className="text-white text-3xl font-bold flex-1">
+          <Text className={`${isDark ? 'text-white' : 'text-gray-800'} text-3xl font-bold flex-1`}>
             My Courses
           </Text>
           
@@ -401,9 +401,9 @@ export default function EnrolledCourses() {
             <>
               <Pressable
                 onPress={toggleViewMode}
-                className="bg-white/20 p-2 rounded-full mr-2"
+                className={`${isDark ? 'bg-white/20' : 'bg-gray-100'} p-2 rounded-full mr-2`}
               >
-                <Ionicons name={isGridView ? "list" : "grid"} size={24} color="white" />
+                <Ionicons name={isGridView ? "list" : "grid"} size={24} color={isDark ? 'white' : '#1F2937'} />
               </Pressable>
               
               {/* Sort Button */}
@@ -412,14 +412,14 @@ export default function EnrolledCourses() {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setShowSortModal(true);
                 }}
-                className="bg-white/20 p-2 rounded-full"
+                className={`${isDark ? 'bg-white/20' : 'bg-gray-100'} p-2 rounded-full`}
               >
-                <Ionicons name="funnel" size={24} color="white" />
+                <Ionicons name="funnel" size={24} color={isDark ? 'white' : '#1F2937'} />
               </Pressable>
             </>
           )}
         </View>
-        <Text className="text-white/90 text-base ml-14">
+        <Text className={`${isDark ? 'text-white/90' : 'text-gray-600'} text-base ml-14`}>
           {enrolledCoursesList.length} {enrolledCoursesList.length === 1 ? 'course' : 'courses'} enrolled
         </Text>
       </View>
